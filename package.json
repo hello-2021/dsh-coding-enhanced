@@ -1,0 +1,40 @@
+{
+  "name": "dsh-coding-enhanced",
+  "version": "0.1.0",
+  "description": "Coding workflow enhancements for DeepSeek Harness: a right-sidebar code-review gate for every AI write/edit (per-file approve/reject, manual editing, floating Finish toolbox) plus one-click withdrawal of the latest turn with workspace restore.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "code-review",
+    "undo",
+    "withdraw"
+  ],
+  "license": "MIT",
+  "author": "dsh-coding-enhanced contributors",
+  "scripts": {
+    "pack": "node -e \"require('node:fs').mkdirSync('dist',{recursive:true})\" && npm pack --pack-destination dist"
+  }
+}

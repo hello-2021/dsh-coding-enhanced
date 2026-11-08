@@ -1,0 +1,5 @@
+# Bundle layer for dsh-coding-enhanced. The manager selects this bundle by
+# package name; the loader resolves the row to the package's main entry.
+- insert:
+    - id: coding-enhanced
+      name: dsh-coding-enhanced
