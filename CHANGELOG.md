@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.0
+
+- **Queued review gate.** The agent now proposes changes with `review_write`
+  and `review_edit`; the tools only queue, so every change in a turn
+  accumulates in one review page instead of blocking on the first edit.
+- **`review_wait`.** The agent calls it once after proposing everything; it
+  blocks until the user finishes and returns applied/rejected/failed files plus
+  the user's instructions.
+- Native `write` / `edit` / `apply_patch` are refused while the gate is on.
+- Reviewed changes are applied by the host from the queued content; multiple
+  changes to one file are applied in order, and rejecting an earlier change can
+  invalidate a later one (reported as a failed apply).
+- Finish stays locked until the agent submits the review (or the turn ends).
+
 ## 0.2.1
 
 - The two feature switches also appear on the plugin's own page in the

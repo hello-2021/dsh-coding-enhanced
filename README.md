@@ -19,7 +19,7 @@ Review every AI file change before it lands · Undo the last turn when it goes w
 
 | | Sub-feature | What it gives you |
 |---|---|---|
-| 🛡️ | **AI Change Review** | Every `write` / `edit` is held in a right-sidebar review tab until you approve, reject with instructions, or edit it yourself. |
+| 🛡️ | **AI Change Review** | The agent queues every change with `review_write` / `review_edit`; they accumulate in one right-sidebar tab, and `review_wait` blocks until you approve, reject with instructions, or edit them yourself. |
 | ↩️ | **Turn Withdraw** | Restore the workspace to before the latest turn and cancel that round in the model's context. |
 
 Both live in one bundle and work independently — install once, use either.
@@ -32,8 +32,9 @@ Both live in one bundle and work independently — install once, use either.
 
 ### 🛡️ 1. AI Change Review
 
-DSH agents normally write files as they go. With this sub-feature, every file
-change **stops before disk** and opens a review tab beside the conversation.
+DSH agents normally write files as they go. With this sub-feature, changes are
+**queued** instead: the agent proposes every edit, they accumulate in one review
+tab, and nothing touches disk until you finish.
 
 ```text
 ┌─ Code review · 3 files ───────────────────────────────────┐
@@ -52,33 +53,50 @@ change **stops before disk** and opens a review tab beside the conversation.
 └───────────────────────────────────────────────────────────┘
 ```
 
+**How it flows**
+
+1. The agent calls **`review_write`** / **`review_edit`** for every change. These
+   tools only queue the proposal — they never write.
+2. All queued changes appear in the **same** right-sidebar review tab, even
+   when the agent proposes them across several steps.
+3. When it has finished proposing, the agent calls **`review_wait`**. That call
+   blocks until you finish; it is how the agent waits for your unified answer.
+4. You **Approve**, **Reject** (with instructions), or **Edit** each file, then
+   **Finish**. Approved and hand-edited files are written; rejected files are
+   not. `review_wait` returns the applied files and the rejection instructions,
+   so the agent can revise in the same turn.
+5. Native `write` / `edit` / `apply_patch` are refused while the gate is on, so
+   the agent cannot bypass the queue.
+
+**Review tab**
+
 - Opens as a **right-sidebar tab**, like a file preview — not a pop-up.
 - **Unified diff** per file: line numbers, hunk headers, coloured added/removed
   lines, and a `new` chip for created files.
-- Per-file **Approve** / **Reject**, plus an instruction box. A rejection sends
-  your text back to the model as the tool error so it can revise.
+- Per-file **Approve** / **Reject**, plus an instruction box.
 - **Edit** the proposed content in place. An edited file becomes a third, yellow
-  **Edited** outcome and is applied automatically — no Approve/Reject needed.
+  **Edited** outcome and is applied automatically.
 - **Floating toolbox** at the bottom-right: `Approve all`, `Reject all`, the
   undecided count, and `Finish`.
-- **Close the tab** to cancel the review: nothing is written, and the model is
-  told to wait for your instruction.
-- A `N files to review` pill brings the tab back if you close it while it is
-  still pending.
+- While the agent is still proposing, a banner says so and `Finish` stays
+  locked; it unlocks when the agent calls `review_wait`.
+- **Close the tab** to cancel: nothing is written, and a waiting `review_wait`
+  returns "review closed".
+- A `N files to review` pill brings the tab back if you close it while pending.
 
 **What the model sees**
 
-| Your action | File on disk | Tool result |
+| Your action | File on disk | `review_wait` result |
 |---|---|---|
-| **Approve** | the tool's proposal | normal success |
-| **Reject** (+ instruction) | nothing | error + your instruction |
-| **Edit** + **Finish** | **your text** (written after the tool) | `Outcome: edited by the user…` |
-| **Close the tab** | nothing | error: review closed; wait for the user |
+| **Approve** | the proposed content | applied |
+| **Reject** + instruction | nothing | rejected + your instruction |
+| **Edit** + **Finish** | **your text** | applied (edited by user) |
+| **Close the tab** | nothing | "review closed" |
+| **Turn ends without `review_wait`** | — | the review is submitted automatically so you can still finish it |
 
-The turn stays paused while the review is open. `Finish` is blocked until every
-non-edited file has a decision.
-
----
+The queue/tool pair is what makes multiple changes reviewable in one page: the
+agent never blocks on the first edit, so it can propose the whole turn before
+asking for your decision.
 
 ### ↩️ 2. Turn Withdraw
 
@@ -127,7 +145,7 @@ Open **Settings → Coding Enhanced** and toggle each sub-feature independently:
 
 | Switch | Enables |
 |---|---|
-| **AI Change Review** | the right-sidebar review gate for every `write`/`edit` |
+| **AI Change Review** | the queued review gate for `review_write` / `review_edit` (native `write`/`edit` are refused while it is on) |
 | **Turn Withdraw** | turn-start snapshots and the withdraw action |
 
 Changes apply immediately and persist in `$DSH_HOME/coding-enhanced/settings.json`.
@@ -137,7 +155,7 @@ tab, above the README — and that README is shown in a bounded, scrollable box.
 
 ### 3. Use the review gate
 
-Ask the agent to change files → the **Code review** tab opens → decide per file
+Ask the agent to change files → it queues them with `review_write` / `review_edit` → the **Code review** tab opens → decide per file
 → **Finish**.
 
 ### 4. Use withdraw
