@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.1
+
+- **Withdraw no longer fails on nested git repositories.** A directory with its
+  own `.git` is recorded as a gitlink (mode `160000`), not as blobs; the restore
+  now skips those paths instead of running `git cat-file blob` on them.
+- Newly added nested repositories are left in place instead of being deleted by
+  withdraw, and the UI reports the skipped paths.
+- `git add -A` now excludes nested repositories it cannot add (for example, a
+  freshly `git init`ed repository with no commit) and retries, so snapshots and
+  withdraw still work in such workspaces.
+
 ## 0.4.0
 
 - **`review_patch` replaces `review_edit`.** Edits are queued as unified diffs

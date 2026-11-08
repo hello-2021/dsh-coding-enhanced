@@ -143,6 +143,9 @@ The last turn wrote something you did not want? Undo it in one click.
 - **Visible in the transcript** — the canceled round is greyed out and its
   changed-files line gains a `已撤销` marker.
 - Available on the **latest completed turn** only.
+- **Nested git repositories are opaque.** A directory with its own `.git` is
+  recorded as a gitlink; withdraw leaves its contents untouched (and tells you
+  which paths it skipped) instead of guessing or deleting them.
 
 ---
 
