@@ -132,6 +132,9 @@ Open **Settings → Coding Enhanced** and toggle each sub-feature independently:
 
 Changes apply immediately and persist in `$DSH_HOME/coding-enhanced/settings.json`.
 
+The same two switches also appear on the plugin's own page in the **Plugins**
+tab, above the README — and that README is shown in a bounded, scrollable box.
+
 ### 3. Use the review gate
 
 Ask the agent to change files → the **Code review** tab opens → decide per file

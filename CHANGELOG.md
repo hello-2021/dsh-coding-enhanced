@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1
+
+- The two feature switches also appear on the plugin's own page in the
+  **Plugins** tab, above its README.
+- The plugin page's README is shown in a bounded, scrollable box instead of
+  expanding the page.
+
 ## 0.2.0
 
 - Settings page (**Settings → Coding Enhanced**) with one switch per
