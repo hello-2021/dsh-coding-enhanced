@@ -1,6 +1,6 @@
 {
   "name": "dsh-coding-enhanced",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Coding workflow enhancements for DeepSeek Harness: a right-sidebar code-review gate for every AI write/edit (per-file approve/reject, manual editing, floating Finish toolbox) plus one-click withdrawal of the latest turn with workspace restore.",
   "type": "module",
   "main": "lib/index.js",

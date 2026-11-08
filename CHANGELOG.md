@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0
+
+- Settings page (**Settings → Coding Enhanced**) with one switch per
+  sub-feature: **AI Change Review** and **Turn Withdraw**.
+- Switches apply immediately; turning the review gate off cancels any pending
+  review with an explicit message, and turning withdraw off stops snapshots and
+  hides the withdraw action. Values persist in
+  `$DSH_HOME/coding-enhanced/settings.json`.
+
 ## 0.1.0
 
 Initial release of **dsh-coding-enhanced**, a growing bundle of coding-workflow

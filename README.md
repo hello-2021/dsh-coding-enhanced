@@ -114,19 +114,30 @@ The last turn wrote something you did not want? Undo it in one click.
 **CLI**
 
 ```sh
-dsh plugin --profile web add /path/to/dsh-coding-enhanced-0.1.0.tgz
+dsh plugin --profile web add /path/to/dsh-coding-enhanced-<version>.tgz
 ```
 
 **Development link** — in the same Add plugin dialog, use the absolute path of
 this directory. DSH installs a link, so source edits apply on the next
 recomposition or restart.
 
-### 2. Use the review gate
+### 2. Choose features
+
+Open **Settings → Coding Enhanced** and toggle each sub-feature independently:
+
+| Switch | Enables |
+|---|---|
+| **AI Change Review** | the right-sidebar review gate for every `write`/`edit` |
+| **Turn Withdraw** | turn-start snapshots and the withdraw action |
+
+Changes apply immediately and persist in `$DSH_HOME/coding-enhanced/settings.json`.
+
+### 3. Use the review gate
 
 Ask the agent to change files → the **Code review** tab opens → decide per file
 → **Finish**.
 
-### 3. Use withdraw
+### 4. Use withdraw
 
 Click the undo icon in the assistant action row on the latest completed turn →
 confirm.
@@ -201,6 +212,8 @@ tools/pre-execute ── waits for your decision
   nested repositories are recorded as gitlinks.
 - **Web UI required.** The review tab needs the Desktop or `dsh web` profile;
   headless and tui profiles have no review surface.
+- **Feature switches** live in Settings → Coding Enhanced and are stored in the
+  DSH home, not in the profile's YAML configuration.
 - Two edits to the same file in one message are previewed cumulatively, in call
   order.
 
@@ -251,7 +264,7 @@ workflow, rebuild and reinstall after each change.
 
 ```sh
 npm run pack
-git tag v0.1.0
+git tag v<version>
 git push origin main --tags
 ```
 
