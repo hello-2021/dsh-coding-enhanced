@@ -78,8 +78,9 @@ tab, and nothing touches disk until you finish.
   **Edited** outcome and is applied automatically.
 - **Floating toolbox** at the bottom-right: `Approve all`, `Reject all`, the
   undecided count, and `Finish`.
-- While the agent is still proposing, a banner says so and `Finish` stays
-  locked; it unlocks when the agent calls `review_wait`.
+- While the agent is still proposing, a banner says so and the per-file
+  decisions and `Finish` stay locked; they unlock when the agent calls
+  `review_wait`.
 - **Close the tab** to cancel: nothing is written, and a waiting `review_wait`
   returns "review closed".
 - A `N files to review` pill brings the tab back if you close it while pending.
@@ -97,6 +98,13 @@ tab, and nothing touches disk until you finish.
 The queue/tool pair is what makes multiple changes reviewable in one page: the
 agent never blocks on the first edit, so it can propose the whole turn before
 asking for your decision.
+
+**One card per file.** Multiple `review_edit` / `review_write` calls that touch
+the same file are merged into a single card: one net diff from the original file
+to the latest queued content, and one Approve/Reject/Edit decision. Edits are
+validated against the current queued content when they are queued, so an edit
+whose `old_string` no longer matches is refused immediately with a request to
+re-read and retry — it never fails silently at Finish.
 
 ### ↩️ 2. Turn Withdraw
 

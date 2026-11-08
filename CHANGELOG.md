@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.1
+
+- **One review card per file.** Multiple edits to the same file are merged into
+  one entry with a single net diff and one Approve/Reject/Edit decision, so
+  rejecting part of a file can no longer leave a later edit with a stale
+  `old_string`.
+- `review_edit` is validated against the current queued content when queued; a
+  missing or ambiguous `old_string` is refused immediately with a request to
+  re-read and retry.
+- Per-file decisions are locked while the agent is still proposing, alongside
+  `Finish`; they unlock when `review_wait` is called.
+
 ## 0.3.0
 
 - **Queued review gate.** The agent now proposes changes with `review_write`
