@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.0
+
+- **`review_patch` replaces `review_edit`.** Edits are queued as unified diffs
+  (`---`/`+++`/`@@` hunks) and applied to a temporary git worktree with
+  `git apply --recount`. Multiple hunks and multiple files are supported; a
+  patch that does not apply is refused at queue time.
+- `review_write` remains for new files and full-file rewrites.
+- `review_wait` now returns a structured per-file result:
+  `{ status, files: [{ path, outcome, comment? }] }` with `applied`,
+  `rejected`, `edited` or `failed`.
+- One review card per file; later patches to the same file are applied on top
+  of its queued content.
+- Deletes, renames, copies, binary patches and paths outside the working
+  directory are refused by `review_patch`.
+
 ## 0.3.1
 
 - **One review card per file.** Multiple edits to the same file are merged into

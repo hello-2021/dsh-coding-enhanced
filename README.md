@@ -55,16 +55,18 @@ tab, and nothing touches disk until you finish.
 
 **How it flows**
 
-1. The agent calls **`review_write`** / **`review_edit`** for every change. These
-   tools only queue the proposal — they never write.
+1. The agent calls **`review_write`** (new file / full rewrite) or
+   **`review_patch`** (a unified diff for edits) for every change. These tools
+   only queue the proposal — they never write.
 2. All queued changes appear in the **same** right-sidebar review tab, even
    when the agent proposes them across several steps.
 3. When it has finished proposing, the agent calls **`review_wait`**. That call
    blocks until you finish; it is how the agent waits for your unified answer.
 4. You **Approve**, **Reject** (with instructions), or **Edit** each file, then
    **Finish**. Approved and hand-edited files are written; rejected files are
-   not. `review_wait` returns the applied files and the rejection instructions,
-   so the agent can revise in the same turn.
+   not. `review_wait` returns one structured result per file
+   (`applied` / `rejected` + your instruction / `edited` / `failed`), so the
+   agent can revise in the same turn.
 5. Native `write` / `edit` / `apply_patch` are refused while the gate is on, so
    the agent cannot bypass the queue.
 
@@ -92,19 +94,40 @@ tab, and nothing touches disk until you finish.
 | **Approve** | the proposed content | applied |
 | **Reject** + instruction | nothing | rejected + your instruction |
 | **Edit** + **Finish** | **your text** | applied (edited by user) |
-| **Close the tab** | nothing | "review closed" |
+| **Close the tab** | nothing | `status: "canceled"` |
 | **Turn ends without `review_wait`** | — | the review is submitted automatically so you can still finish it |
 
 The queue/tool pair is what makes multiple changes reviewable in one page: the
 agent never blocks on the first edit, so it can propose the whole turn before
 asking for your decision.
 
-**One card per file.** Multiple `review_edit` / `review_write` calls that touch
+**One card per file.** Multiple `review_patch` / `review_write` calls that touch
 the same file are merged into a single card: one net diff from the original file
-to the latest queued content, and one Approve/Reject/Edit decision. Edits are
-validated against the current queued content when they are queued, so an edit
-whose `old_string` no longer matches is refused immediately with a request to
-re-read and retry — it never fails silently at Finish.
+to the latest queued content, and one Approve/Reject/Edit decision. When a file
+already has queued content, the next patch is applied on top of it, so the card
+always shows the cumulative change.
+
+**Patches, not `old_string`.** `review_patch` takes a standard unified diff:
+
+```diff
+--- a/src/app.ts
++++ b/src/app.ts
+@@ -10,7 +10,9 @@
+   const app = createApp()
+-  app.use(oldRouter)
++  app.use(newRouter)
++  app.use(logger)
+   app.listen(3000)
+```
+
+- The `@@ -10,7 +10,9 @@` header is the line range — no separate line counting.
+- The host seeds a temporary git worktree with the **current queued content**
+  and applies each file section with `git apply --recount`, so context matching,
+  offsets, multi-hunk and multi-file patches all behave like git.
+- A patch that does not apply is refused **at queue time**; nothing is staged.
+- Paths are relative to the working directory (`a/` / `b/` prefixes optional).
+  Deletes, renames, copies, binary patches and paths outside the working
+  directory are refused — use `review_write` for those cases.
 
 ### ↩️ 2. Turn Withdraw
 
