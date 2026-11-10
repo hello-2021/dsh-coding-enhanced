@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.1
+
+- Fix withdraw failing with `surface replace: end seq ... not found in surface`
+  when the turn's last event was a tool result or `turn/end`. The replacement
+  range now ends on the last **model-visible** surface message; the workspace
+  restore and the context cancellation stay consistent.
+
 ## 0.5.0
 
 - **Persistent snapshots.** Snapshot mappings (tree, cwd, gitDir, endSeq) are
