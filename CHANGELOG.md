@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.5.0
+
+- **Persistent snapshots.** Snapshot mappings (tree, cwd, gitDir, endSeq) are
+  stored per turn in `state.json`; each tree has a keepalive ref under
+  `refs/coding-enhanced/...`, so restarts/reinstalls and `git gc` no longer lose
+  withdraw.
+- **Multi-turn rewind.** The last `keepTurns` turns (default 10, configurable
+  1–50) stay withdrawable. Withdrawing turn N restores the workspace to before
+  N and cancels turns N..latest in the model context, greying all of them.
+- **Nested git repository snapshots.** `nestedSnapshots` (default on) gives
+  each nested repository its own shadow repository and restores its working
+  files (excluding `.git`); off/new nested repos are left untouched and
+  reported as skipped.
+- **Cleanup.** `autoGc` runs `git gc` on dirty shadow repositories; a manual
+  cleanup endpoint/button prunes extra snapshots and compacts every shadow
+  repository. Keepalive refs make GC safe.
+- **Settings UI.** Grouped Review / Turn withdraw cards, retention input,
+  nested/autoGc switches, cleanup action, relative typography; shown in
+  Settings → Coding Enhanced and on the plugin page.
+- **Review view.** Typography and spacing are `em`-based and follow the app's
+  base font size, with a larger diff, buttons, chips and editor.
+
 ## 0.4.1
 
 - **Withdraw no longer fails on nested git repositories.** A directory with its

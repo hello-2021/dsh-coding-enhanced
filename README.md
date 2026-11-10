@@ -134,18 +134,31 @@ always shows the cumulative change.
 The last turn wrote something you did not want? Undo it in one click.
 
 - **Snapshot at turn start** — a shadow git repository under
-  `$DSH_HOME/coding-enhanced` records the whole working directory before the
-  turn's first tool runs. It never writes into your repository.
+  `$DSH_HOME/coding-enhanced` records the working directory before the turn's
+  first tool runs. It never writes into your repository.
+- **Persisted across restarts** — snapshots are stored per turn in
+  `state.json` together with a git ref that keeps every retained tree alive.
+  Reinstalling or restarting the plugin no longer loses the withdraw mapping.
+- **Multi-turn rewind** — the last **10** turns (configurable, 1–50) stay
+  withdrawable. Withdrawing turn *N* restores the workspace to before *N* and
+  cancels turns *N* through the latest in the model's context; the transcript
+  greys all of them. The action on older turns says **Withdraw from here** and
+  warns that later turns are canceled too.
 - **Restore on withdraw** — modified, created and deleted files, symlinks and
   executable bits all return to their pre-turn state.
-- **Cancel the round** — the turn is removed from the model's context via a
-  model-only surface replacement, while the append-only transcript keeps it.
-- **Visible in the transcript** — the canceled round is greyed out and its
-  changed-files line gains a `已撤销` marker.
-- Available on the **latest completed turn** only.
-- **Nested git repositories are opaque.** A directory with its own `.git` is
-  recorded as a gitlink; withdraw leaves its contents untouched (and tells you
-  which paths it skipped) instead of guessing or deleting them.
+- **Nested git repositories are included** — each one gets its own shadow
+  repository; its working files (excluding `.git`) are snapshotted and restored
+  too. Turn the *Snapshot nested git repositories* setting off to leave them
+  untouched; either way the response tells you which paths were skipped.
+- **Cleanup** — snapshots beyond the retention count are dropped; `autoGc`
+  compacts the shadow repositories after pruning/withdrawing, and **Clean up
+  now** forces a compaction of every shadow repository.
+- **Cancel the round** — the hidden turns are removed from the model's context
+  via a model-only surface replacement, while the append-only transcript keeps
+  them; their markers show `已撤销` and the restored file count.
+- Only **completed** turns are withdrawable; an active turn shows a disabled
+  action.
+
 
 ---
 
@@ -175,21 +188,22 @@ recomposition or restart.
 
 ### 2. Choose features
 
-Open **Settings → Coding Enhanced** and toggle each sub-feature independently:
+Open **Settings → Coding Enhanced** (the same controls appear on the plugin's page in the **Plugins** tab):
 
-| Switch | Enables |
-|---|---|
-| **AI Change Review** | the queued review gate for `review_write` / `review_edit` (native `write`/`edit` are refused while it is on) |
-| **Turn Withdraw** | turn-start snapshots and the withdraw action |
+| Setting | Default | What it does |
+|---|---|---|
+| **AI Change Review** | on | the queued review gate for `review_write` / `review_patch` |
+| **Turn Withdraw** | on | turn-start snapshots and the withdraw action |
+| **Turns kept for withdraw** | 10 | how many recent turns stay withdrawable (1–50) |
+| **Snapshot nested git repositories** | on | include nested repositories' working files (excluding `.git`) |
+| **Automatic cleanup** | on | run `git gc` on shadow snapshots after pruning or withdrawing |
+| **Clean up now** | — | prune extra snapshots and compact every shadow repository |
 
-Changes apply immediately and persist in `$DSH_HOME/coding-enhanced/settings.json`.
-
-The same two switches also appear on the plugin's own page in the **Plugins**
-tab, above the README — and that README is shown in a bounded, scrollable box.
+Settings apply immediately and persist in `$DSH_HOME/coding-enhanced/settings.json`.
 
 ### 3. Use the review gate
 
-Ask the agent to change files → it queues them with `review_write` / `review_edit` → the **Code review** tab opens → decide per file
+Ask the agent to change files → it queues them with `review_write` / `review_patch` → the **Code review** tab opens → decide per file
 → **Finish**.
 
 ### 4. Use withdraw
@@ -255,22 +269,26 @@ tools/pre-execute ── waits for your decision
 
 ## ⚠️ Limits
 
-- **Only `write` / `edit` are gated.** `apply_patch` is not registered in the
-  desktop profile, and shell edits (`bash`, `sed`, `rm`, …) are outside the
-  gate.
+- **Native `write` / `edit` / `apply_patch` are refused** while the review gate
+  is on; the agent must use `review_write` / `review_patch`. Shell edits
+  (`bash`, `sed`, `rm`, …) are outside the gate.
 - **Editable text is capped at 200 KiB** per file. Binary and larger files are
   review-only.
 - **A pending review lives on the Host.** A page reload reopens it; a Host
   restart drops it together with the blocked turn.
-- **Withdraw covers the latest completed turn.** Files ignored by `.gitignore`
-  (or the defaults `.git/`, `node_modules/`, `.DS_Store`) are not snapshotted;
-  nested repositories are recorded as gitlinks.
+- **Withdraw covers retained turns** (`keepTurns`, default 10). Older snapshots
+  are pruned. Files matching the default excludes (`.git/`, `node_modules/`,
+  `.DS_Store`, `.dsh-coding-enhanced/`) are not snapshotted. Nested repositories
+  are snapshotted only while *Snapshot nested git repositories* is on; a nested
+  repository created during the turn is left in place and reported as skipped.
 - **Web UI required.** The review tab needs the Desktop or `dsh web` profile;
   headless and tui profiles have no review surface.
 - **Feature switches** live in Settings → Coding Enhanced and are stored in the
   DSH home, not in the profile's YAML configuration.
 - Two edits to the same file in one message are previewed cumulatively, in call
   order.
+- **Review view typography is relative** (`em`) and follows the application's
+  base font size; it is deliberately larger than the old fixed-pixel layout.
 
 ---
 
@@ -285,7 +303,7 @@ Planned directions (not commitments):
 - side-by-side diff mode and per-file folding;
 - review history per session (reopen a finished review);
 - per-project review policy (auto-approve patterns);
-- multi-turn withdraw / redo.
+- redo for withdrawn turns.
 
 Have an idea? Open an issue.
 
