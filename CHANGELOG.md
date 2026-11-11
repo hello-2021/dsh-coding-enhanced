@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.4
+
+- Withdrawn rounds now show a prominent banner at the turn tail: undo icon,
+  "This round was withdrawn", restored-file count, and a `Withdrawn` chip.
+- Withdrawn turn rows use a softer grey, a dashed warning border, and the
+  changed-files label instead of a harsh grayscale filter.
+
 ## 0.5.3
 
 - Fix withdraw failing with `developer/message step must be positive`: the
