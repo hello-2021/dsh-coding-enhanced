@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.3
+
+- Fix withdraw failing with `developer/message step must be positive`: the
+  synthetic developer message now uses the withdrawn turn's last step (at least
+  1) instead of 0.
+
 ## 0.5.2
 
 - Fix withdraw failing with `developer/message turn must be a non-negative safe
