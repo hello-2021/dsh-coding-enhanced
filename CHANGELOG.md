@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.5
+
+- Repair snapshot `endSeq` from the session's `turn/end` event when the plugin
+  was reloaded while a turn was running, so the withdraw action returns after a
+  restart.
+- An incomplete turn now reports reason `incomplete` and shows a disabled
+  withdraw action instead of no action at all.
+- Poll the withdraw status every 1.5s while a session has withdraw UI mounted,
+  so the action enables as soon as the turn ends.
+
 ## 0.5.4
 
 - Withdrawn rounds now show a prominent banner at the turn tail: undo icon,
