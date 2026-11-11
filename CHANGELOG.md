@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.2
+
+- Fix withdraw failing with `developer/message turn must be a non-negative safe
+  integer`: the synthetic developer message now carries the withdrawn `turn`
+  and `step`.
+- Keep the 0.5.1 fix (surface replacement must end on a model-visible event).
+
 ## 0.5.1
 
 - Fix withdraw failing with `surface replace: end seq ... not found in surface`
