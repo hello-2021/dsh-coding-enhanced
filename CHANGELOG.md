@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.6
+
+- A withdrawn turn keeps a visible indicator in the assistant action slot: the
+  withdraw button becomes a dashed `Withdrawn` chip with the undo icon. This is
+  independent of the turn-tail banner and works even if that banner is not
+  rendered.
+- Status now provides anchors for withdrawn turns so the action slot can find
+  the turn and render the chip.
+
 ## 0.5.5
 
 - Repair snapshot `endSeq` from the session's `turn/end` event when the plugin
