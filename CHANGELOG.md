@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.10
+
+- Add a session-scoped global painter for withdrawn turns. It runs while any
+  withdraw UI is mounted for the session and marks the outermost
+  `data-chat-turn` nodes every second, so grey/frame no longer depend on the
+  turn-tail marker being mounted (virtualized or collapsed turns).
+
 ## 0.5.9
 
 - Fix withdrawn turns not being greyed or framed: the marker skipped its own
