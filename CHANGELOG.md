@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.6.1
+
+- Backport the `user/message` withdraw tombstone to the 0.5.6 line: a
+  `developer/message` appended after `turn/end` is rejected when the session log
+  is replayed on the next DSH start. The empty user message projects to no wire
+  message, so the withdrawn turn stays hidden without a synthetic turn.
+- The review UI stays at 0.5.6 (withdrawn chip and banner). The grey/frame work
+  remains on the `wip-grey` branch.
+
 ## 0.5.6
 
 - A withdrawn turn keeps a visible indicator in the assistant action slot: the
