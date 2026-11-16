@@ -133,6 +133,12 @@ always shows the cumulative change.
 
 The last turn wrote something you did not want? Undo it in one click.
 
+> **Deep dive:** [docs/withdraw.md](docs/withdraw.md) explains the function-level
+> flow and the shadow-git repository separately. In one sentence: withdraw does
+> not delete the turn — it restores the workspace from a shadow-git tree and
+> appends one model-only surface replacement, while the append-only log keeps
+> the original turn.
+
 - **Snapshot at turn start** — a shadow git repository under
   `$DSH_HOME/coding-enhanced` records the working directory before the turn's
   first tool runs. It never writes into your repository.
@@ -256,8 +262,11 @@ tools/pre-execute ── waits for your decision
   the snapshot.
 - Withdraw diffs the current tree against the snapshot and restores every
   changed path.
-- The round is canceled with a model-only `developer/message` surface
-  replacement covering its surface nodes.
+- The round is canceled with a model-only `user/message` surface replacement
+  covering its surface nodes. It must be a `user/message` because
+  `developer/message` is step-scoped and the replay validator rejects it after
+  `turn/end`; [docs/withdraw.md](docs/withdraw.md#7-why-the-old-implementation-corrupted-the-session)
+  walks through the exact failure.
 - State lives in `$DSH_HOME/coding-enhanced/state.json`; old `withdraw-round`
   directories are migrated automatically.
 
@@ -318,6 +327,7 @@ No build step:
 ```text
 lib/index.js        Host plugin (ESM)
 lib/client.js       Browser bundle (prebuilt lazy-CJS, served by dsh-client-modules)
+docs/withdraw.md    Turn withdraw mechanism (project + shadow-git views)
 cordis.patch.yml    Bundle layer (inserts the coding-enhanced row)
 ```
 

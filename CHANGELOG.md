@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.5.8
+
+- Add `docs/withdraw.md`: the withdraw mechanism explained separately as the
+  plugin's function flow and as the shadow-git repository operations, plus
+  state layout, failure modes, and the full analysis of the
+  `developer/message` replay corruption.
+- README now quotes and links the deep dive, and describes the tombstone as a
+  `user/message` surface replacement.
+
+## 0.5.7
+
+- Fix withdraw corrupting the session on the next DSH start with
+  `developer/message does not match an open turn and step`. The synthetic
+  tombstone is now a `user/message` surface replacement, which the session
+  format accepts after `turn/end`; the previous `developer/message` was only
+  accepted by the live append and failed relationship validation on replay.
+- The empty user message projects to no provider message, so the withdrawn
+  turn stays out of the model context without adding a synthetic turn.
+
+## 0.5.7
+
+- Fix withdrawn turns not being greyed or framed: the marker skipped its own
+  `data-chat-turn` node, so turns with a single container were never marked.
+- Mark only the outermost turn containers so nested rows do not multiply
+  opacity; nested rows inherit the dim.
+- Repaint the withdrawn attributes every 500ms so virtualized chat rows keep
+  them after re-renders.
+- Give the turn's process group a dashed frame and rows a dashed left edge.
+
 ## 0.5.6
 
 - A withdrawn turn keeps a visible indicator in the assistant action slot: the
