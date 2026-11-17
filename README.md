@@ -68,8 +68,9 @@ tab, and nothing touches disk until you finish.
    (`applied` / `rejected` + your instruction / `edited` / `failed`), so the
    agent can revise in the same turn.
 5. While the input-bar **Review tools** switch is on, the agent is instructed
-   to use these tools for every file change; turning it off returns it to
-   native `write` / `edit`.
+   to use these tools, and native `write` / `edit` / `apply_patch` are refused
+   by the plugin's tool gate. Turning the switch off returns it to native
+   editing. Shell commands (`bash`, `sed`, …) are outside the review.
 
 **Review tab**
 
@@ -321,9 +322,11 @@ tools/pre-execute ── waits for your decision
 
 ## ⚠️ Limits
 
-- The review tools are exposed while **AI Change Review** and the input-bar
-  **Auto review** switch are on; with the switch off the agent uses native
-  `write` / `edit`. Shell edits (`bash`, `sed`, `rm`, …) are outside the review.
+- While **AI Change Review** and the input-bar **Auto review** switch are on,
+  native `write` / `edit` / `apply_patch` are refused by the plugin's
+  `tools/pre-execute` policy; the agent must use `review_write` /
+  `review_patch`. Turning Auto review off allows native editing again. Shell
+  commands (`bash`, `sed`, `rm`, …) are not intercepted.
 - **Editable text is capped at 200 KiB** per file. Binary and larger files are
   review-only.
 - **A pending review lives on the Host.** A page reload reopens it; a Host

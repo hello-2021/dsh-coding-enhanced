@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.15
+
+- Restore the native tool gate: while AI Change Review and the input-bar Auto
+  review switch are on, `write` / `edit` / `apply_patch` are denied by
+  `tools/pre-execute`, so the agent must use `review_write` / `review_patch`.
+  Shell commands are not intercepted; turning Auto review off restores native
+  editing.
+
 ## 0.5.14
 
 - While the agent is still proposing, per-file Approve/Reject/Edit and the
