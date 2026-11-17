@@ -42,7 +42,7 @@ const index = {
           version,
           publishTimestamp,
           source: { type: 'git', url: repoUrl, commit },
-          engines: { dsh: pkg.engines?.dsh ?? '^0.2.1-rc.1' },
+          engines: { dsh: pkg.engines?.dsh ?? '>=0.2.0-0 <0.3.0' },
         },
       ],
     },

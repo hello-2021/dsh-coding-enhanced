@@ -46,7 +46,7 @@
             "commit": "5cc63572f4e44910fae09faebda2ffc33b0773c3"
           },
           "engines": {
-            "dsh": "^0.2.1-rc.1"
+            "dsh": ">=0.2.0-0 <0.3.0"
           }
         }
       ]
