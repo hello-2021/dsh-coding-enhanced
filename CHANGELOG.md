@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.12
+
+- Put the Fold/Unfold control next to the always-visible `Withdrawn` chip in the
+  assistant action slot, so it exists even when the turn-tail banner is not
+  mounted. Both controls share the same per-session/turn fold state.
+
 ## 0.5.11
 
 - Keep the `Withdrawn` chip visible without hovering the turn tail.
