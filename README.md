@@ -185,23 +185,31 @@ The last turn wrote something you did not want? Undo it in one click.
 
 **From GitHub (fastest)**
 
-1. Open the [Releases](https://github.com/hello-2021/dsh-coding-enhanced/releases)
-   page and copy the latest `dsh-coding-enhanced-<version>.tgz` URL.
-2. **Plugins → Add plugin** → paste the URL → **Install** → **Enable now**.
+1. Open **Plugins → Add plugin**.
+2. Paste the repository URL:
+   `https://github.com/hello-2021/dsh-coding-enhanced`
+3. **Install** → **Enable now**.
+
+```sh
+dsh plugin --profile desktop add https://github.com/hello-2021/dsh-coding-enhanced
+```
+
+DSH treats a GitHub repository URL as a git spec: it checks the repository with
+`git ls-remote`, then pnpm clones the default branch. The package ships its
+built `lib/`, so no build step is needed. A git install tracks the default
+branch at install time and updates by uninstalling/reinstalling (the page has no
+Versions section for git installs).
+
+**Pinned release tarball** — download a `dsh-coding-enhanced-<version>.tgz`
+from [Releases](https://github.com/hello-2021/dsh-coding-enhanced/releases) and
+paste its URL; use this when you want a fixed version:
 
 ```sh
 dsh plugin --profile desktop add https://github.com/hello-2021/dsh-coding-enhanced/releases/download/v<version>/dsh-coding-enhanced-<version>.tgz
 ```
 
-Or install straight from the repository (pnpm git spec, no release needed):
-
-```sh
-dsh plugin --profile desktop add github:hello-2021/dsh-coding-enhanced
-```
-
-> **Direct npm install is planned.** The one-click path today is the GitHub
-> release tarball above; once the package is published, `dsh plugin add
-> dsh-coding-enhanced` will work without a URL.
+> **Direct npm install is planned.** Once the package is published,
+> `dsh plugin add dsh-coding-enhanced` will work without a URL.
 
 **CLI (local tarball)**
 
