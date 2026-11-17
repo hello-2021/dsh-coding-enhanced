@@ -1,7 +1,7 @@
 {
   "name": "dsh-coding-enhanced",
-  "version": "0.5.12",
-  "description": "Coding workflow enhancements for DeepSeek Harness: a right-sidebar code-review gate for every AI write/edit (per-file approve/reject, manual editing, floating Finish toolbox) plus one-click withdrawal of the latest turn with workspace restore.",
+  "version": "0.5.14",
+  "description": "DSH bundle: AI change review with a right-sidebar diff gate, and multi-turn workspace withdraw.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -30,6 +30,8 @@
     "dsh-plugin",
     "deepseek-harness",
     "code-review",
+    "review",
+    "patch",
     "undo",
     "withdraw"
   ],
@@ -37,5 +39,16 @@
   "author": "dsh-coding-enhanced contributors",
   "scripts": {
     "pack": "node -e \"require('node:fs').mkdirSync('dist',{recursive:true})\" && npm pack --pack-destination dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hello-2021/dsh-coding-enhanced.git"
+  },
+  "homepage": "https://github.com/hello-2021/dsh-coding-enhanced#readme",
+  "bugs": {
+    "url": "https://github.com/hello-2021/dsh-coding-enhanced/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

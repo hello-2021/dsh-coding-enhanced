@@ -19,7 +19,7 @@ Review every AI file change before it lands · Undo the last turn when it goes w
 
 | | Sub-feature | What it gives you |
 |---|---|---|
-| 🛡️ | **AI Change Review** | The agent queues every change with `review_write` / `review_edit`; they accumulate in one right-sidebar tab, and `review_wait` blocks until you approve, reject with instructions, or edit them yourself. |
+| 🛡️ | **AI Change Review** | The agent queues every change with `review_write` / `review_patch`; they accumulate in one right-sidebar tab, and `review_wait` blocks until you approve, reject with instructions, or edit them yourself. |
 | ↩️ | **Turn Withdraw** | Restore the workspace to before the latest turn and cancel that round in the model's context. |
 
 Both live in one bundle and work independently — install once, use either.
@@ -67,8 +67,9 @@ tab, and nothing touches disk until you finish.
    not. `review_wait` returns one structured result per file
    (`applied` / `rejected` + your instruction / `edited` / `failed`), so the
    agent can revise in the same turn.
-5. Native `write` / `edit` / `apply_patch` are refused while the gate is on, so
-   the agent cannot bypass the queue.
+5. While the input-bar **Review tools** switch is on, the agent is instructed
+   to use these tools for every file change; turning it off returns it to
+   native `write` / `edit`.
 
 **Review tab**
 
@@ -182,10 +183,30 @@ The last turn wrote something you did not want? Undo it in one click.
 3. Paste the tarball's absolute path (or its URL).
 4. **Install** → **Enable now**.
 
-**CLI**
+**From GitHub (fastest)**
+
+1. Open the [Releases](https://github.com/hello-2021/dsh-coding-enhanced/releases)
+   page and copy the latest `dsh-coding-enhanced-<version>.tgz` URL.
+2. **Plugins → Add plugin** → paste the URL → **Install** → **Enable now**.
 
 ```sh
-dsh plugin --profile web add /path/to/dsh-coding-enhanced-<version>.tgz
+dsh plugin --profile desktop add https://github.com/hello-2021/dsh-coding-enhanced/releases/download/v<version>/dsh-coding-enhanced-<version>.tgz
+```
+
+Or install straight from the repository (pnpm git spec, no release needed):
+
+```sh
+dsh plugin --profile desktop add github:hello-2021/dsh-coding-enhanced
+```
+
+> **Direct npm install is planned.** The one-click path today is the GitHub
+> release tarball above; once the package is published, `dsh plugin add
+> dsh-coding-enhanced` will work without a URL.
+
+**CLI (local tarball)**
+
+```sh
+dsh plugin --profile desktop add /path/to/dsh-coding-enhanced-<version>.tgz
 ```
 
 **Development link** — in the same Add plugin dialog, use the absolute path of
@@ -207,12 +228,26 @@ Open **Settings → Coding Enhanced** (the same controls appear on the plugin's 
 
 Settings apply immediately and persist in `$DSH_HOME/coding-enhanced/settings.json`.
 
-### 3. Use the review gate
+### 3. Review tools switch
+
+Next to the model selector at the bottom-right of the message input, the shield
+button opens **Review tools**:
+
+| Auto review | What the agent gets |
+|---|---|
+| **on** | a system-prompt instruction to queue every edit with `review_write` / `review_patch`, then call `review_wait` and wait; the review tools are available |
+| **off** | the review tools are not exposed; the agent uses normal `write` / `edit` |
+
+This is a convenience switch, separate from **Settings → Coding Enhanced → AI
+Change Review** (which enables the review tab and withdraw surfaces). More
+review switches will be added to the same popover.
+
+### 4. Use the review gate
 
 Ask the agent to change files → it queues them with `review_write` / `review_patch` → the **Code review** tab opens → decide per file
 → **Finish**.
 
-### 4. Use withdraw
+### 5. Use withdraw
 
 Click the undo icon in the assistant action row on the latest completed turn →
 confirm.
@@ -278,9 +313,9 @@ tools/pre-execute ── waits for your decision
 
 ## ⚠️ Limits
 
-- **Native `write` / `edit` / `apply_patch` are refused** while the review gate
-  is on; the agent must use `review_write` / `review_patch`. Shell edits
-  (`bash`, `sed`, `rm`, …) are outside the gate.
+- The review tools are exposed while **AI Change Review** and the input-bar
+  **Auto review** switch are on; with the switch off the agent uses native
+  `write` / `edit`. Shell edits (`bash`, `sed`, `rm`, …) are outside the review.
 - **Editable text is capped at 200 KiB** per file. Binary and larger files are
   review-only.
 - **A pending review lives on the Host.** A page reload reopens it; a Host

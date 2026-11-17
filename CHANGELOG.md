@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.5.14
+
+- While the agent is still proposing, per-file Approve/Reject/Edit and the
+  instruction box are enabled; only Finish stays locked until review_wait.
+- Decisions are reset when a new edit changes that file.
+- The diff area has a drag handle to resize its height (double-click resets),
+  remembered across sessions.
+- New input-bar **Review tools** switch with an Auto review master switch:
+  on injects the review workflow into the agent prompt and exposes the review
+  tools; off hides them and returns the agent to native write/edit. The switch
+  is separate from the Settings AI Change Review function switch.
+- README: GitHub/tarball install, direct git install, and the review switch.
+- Package metadata for GitHub/npm distribution.
+
+## 0.5.13
+
+- While the agent is still proposing, per-file Approve/Reject/Edit and the
+  instruction box are enabled; only Finish stays locked until review_wait.
+- A decision is reset when a new edit changes that file, so stale approvals do
+  not apply to changed content.
+- The diff area has a drag handle to resize its height (double-click resets);
+  the height is remembered.
+
 ## 0.5.12
 
 - Put the Fold/Unfold control next to the always-visible `Withdrawn` chip in the
