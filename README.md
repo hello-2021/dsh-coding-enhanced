@@ -209,8 +209,8 @@ paste its URL; use this when you want a fixed version:
 dsh plugin --profile desktop add https://github.com/hello-2021/dsh-coding-enhanced/releases/download/v<version>/dsh-coding-enhanced-<version>.tgz
 ```
 
-> **Direct npm install is planned.** Once the package is published,
-> `dsh plugin add dsh-coding-enhanced` will work without a URL.
+> **npm install by name is prepared but not published.** The unscoped name
+> `dsh-coding-enhanced` is currently free; see **Publishing** below.
 
 **CLI (local tarball)**
 
@@ -221,6 +221,29 @@ dsh plugin --profile desktop add /path/to/dsh-coding-enhanced-<version>.tgz
 **Development link** — in the same Add plugin dialog, use the absolute path of
 this directory. DSH installs a link, so source edits apply on the next
 recomposition or restart.
+
+**Install by package name (npm)**
+
+The package is **not on npm yet**; the unscoped name `dsh-coding-enhanced` is
+currently free. Once published with `npm publish --access public`, the Add
+plugin box accepts the bare name `dsh-coding-enhanced` (and
+`dsh plugin add dsh-coding-enhanced` works).
+
+**Discover / plugin market**
+
+DSH's **Discover** tab is a reader for plugin **index JSON** files; the app does
+not ship a central community catalog. Official entries are built into DSH;
+third-party plugins become discoverable by publishing an index and sharing its
+URL. This repository ships a format-1 index pinned to the v0.5.15 commit:
+
+1. Enable **Plugins → More → Experimental plugins → Custom plugin indexes**.
+2. Open **Discover → Add index source** and paste:
+   `https://raw.githubusercontent.com/hello-2021/dsh-coding-enhanced/main/market/index.json`
+3. Install **Coding Enhanced** from the index.
+
+The index installs the pinned git commit, so it works before the package is on
+npm. Regenerate it for a release with
+`node scripts/market-index.mjs v<version>`.
 
 ### 2. Choose features
 
@@ -384,6 +407,25 @@ npm run pack          # dist/dsh-coding-enhanced-<version>.tgz
 For fast iteration, install this directory as a **link** through
 **Plugins → Add plugin** and edit the source directly. When using the tarball
 workflow, rebuild and reinstall after each change.
+
+### Publishing
+
+The npm name is free but the package is not published yet. Two ways:
+
+```sh
+npm login
+npm publish --access public
+```
+
+or add a repository secret `NPM_TOKEN` (an npm automation/granular token with
+publish rights); `.github/workflows/npm-publish.yml` publishes on every `v*` tag
+and on manual dispatch. Without the secret that workflow fails.
+
+After a release, regenerate the market index and commit it:
+
+```sh
+node scripts/market-index.mjs v<version>
+```
 
 ---
 

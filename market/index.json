@@ -1,0 +1,55 @@
+{
+  "format": 1,
+  "title": {
+    "en": "Coding Enhanced",
+    "zh": "编码增强"
+  },
+  "description": {
+    "en": "DSH bundle: AI change review and multi-turn withdraw.",
+    "zh": "DSH 插件：AI 改动审查与多轮撤回。"
+  },
+  "plugins": [
+    {
+      "name": "dsh-coding-enhanced",
+      "title": {
+        "en": "Coding Enhanced",
+        "zh": "编码增强"
+      },
+      "description": {
+        "en": "DSH bundle: AI change review with a right-sidebar diff gate, and multi-turn workspace withdraw.",
+        "zh": "在右侧审查 AI 的文件改动，并用影子 git 快照撤回轮次。"
+      },
+      "author": "xthw",
+      "homepage": "https://github.com/hello-2021/dsh-coding-enhanced#readme",
+      "repository": {
+        "url": "https://github.com/hello-2021/dsh-coding-enhanced"
+      },
+      "metadata": {
+        "keywords": [
+          "dsh",
+          "dsh-plugin",
+          "deepseek-harness",
+          "code-review",
+          "review",
+          "patch",
+          "undo",
+          "withdraw"
+        ]
+      },
+      "versions": [
+        {
+          "version": "0.5.15",
+          "publishTimestamp": 1794907113,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/hello-2021/dsh-coding-enhanced",
+            "commit": "5cc63572f4e44910fae09faebda2ffc33b0773c3"
+          },
+          "engines": {
+            "dsh": "^0.2.1-rc.1"
+          }
+        }
+      ]
+    }
+  ]
+}
