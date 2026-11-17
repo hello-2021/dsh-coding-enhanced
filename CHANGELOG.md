@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.11
+
+- Keep the `Withdrawn` chip visible without hovering the turn tail.
+- Add a Fold/Unfold control to the withdrawn banner; the turn starts expanded,
+  the state is remembered per session/turn in localStorage, and folded turns
+  keep only the tail banner while hiding the round's rows.
+
 ## 0.5.10
 
 - Add a session-scoped global painter for withdrawn turns. It runs while any
