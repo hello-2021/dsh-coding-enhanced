@@ -69,25 +69,11 @@
   }
   .brand .slash { color: var(--faint); font-weight: 400; }
   .brand .subtle { color: var(--muted); font-weight: 500; }
-  .directions {
-    display: flex; gap: 3px; padding: 3px;
-    border: 1px solid var(--border-soft); border-radius: 10px;
-    background: var(--seg-bg);
-  }
-  .directions button {
-    border: 0; background: transparent; color: var(--muted);
-    padding: 6px 12px; border-radius: 7px; font-size: 12px; font-weight: 600;
-    transition: all .18s ease;
-  }
-  .directions button:hover { color: var(--text); }
-  .directions button.active {
-    background: var(--panel); color: var(--text);
-    box-shadow: 0 1px 2px rgba(31,35,40,.12), inset 0 0 0 1px var(--border-soft);
-  }
   .top-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
   .paired { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border: 1px solid var(--border-soft); border-radius: 999px; background: var(--panel); }
   .dot { width: 7px; height: 7px; border-radius: 50%; background: #2da44e; box-shadow: 0 0 0 3px rgba(45,164,78,.12); }
   .passkey { padding: 5px 8px; border-radius: 6px; background: var(--seg-bg); color: var(--muted); font-size: 11px; }
+  .gh-pill { padding: 5px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 650; color: #6e40c9; background: rgba(130,80,223,.09); border: 1px solid rgba(130,80,223,.16); }
   .avatar {
     width: 28px; height: 28px; border-radius: 50%;
     display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 11px;
@@ -283,33 +269,17 @@
   .app[data-dim="on"] .row[data-round="1"]:not(.removed) .ln { opacity: .7; }
 
   .ai-note {
-    display: flex; align-items: flex-start; gap: 8px;
-    margin: 5px 10px 7px; padding: 7px 10px 7px 12px;
-    border-left: 2px solid transparent;
-    border-radius: 0 8px 8px 0;
-    background: var(--ai-bg);
-    box-shadow: inset 0 0 0 1px var(--ai-border);
-    color: var(--ai-text); font-size: 12px; line-height: 1.55;
-    position: relative;
+    display: grid; grid-template-columns: 42px 42px 20px minmax(0,1fr);
+    min-height: 24px; align-items: stretch; cursor: help;
+    background: linear-gradient(90deg, rgba(124,58,237,.10), rgba(217,70,239,.07) 55%, rgba(34,211,238,.05));
+    box-shadow: inset 2px 0 0 #a855f7;
   }
-  .ai-note::before {
-    content: ''; position: absolute; left: -2px; top: 8px; bottom: 8px; width: 2px; border-radius: 2px;
-    background: linear-gradient(180deg,#a78bfa,#e879f9 52%,#67e8f9);
-    box-shadow: 0 0 12px rgba(192,132,252,.6);
-  }
-  .ai-spark {
-    flex: none; margin-top: 1px; font-size: 12px;
-    background: linear-gradient(135deg,#a78bfa,#e879f9 55%,#67e8f9);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    filter: drop-shadow(0 0 5px rgba(192,132,252,.55));
-  }
-  .ai-badge {
-    flex: none; margin-top: 1px; padding: 0 5px; border-radius: 999px;
-    font-size: 9px; line-height: 15px; font-weight: 750; letter-spacing: .04em;
-    color: #6e40c9; background: linear-gradient(90deg, rgba(167,139,250,.2), rgba(232,121,249,.14));
-    box-shadow: inset 0 0 0 1px rgba(192,132,252,.24);
-  }
-  .ai-text { flex: 1; min-width: 0; }
+  .ai-note:hover { background: linear-gradient(90deg, rgba(124,58,237,.15), rgba(217,70,239,.10) 55%, rgba(34,211,238,.07)); }
+  .ai-note .ai-no { background: rgba(168,85,247,.10); border-right: 1px solid var(--border-soft); }
+  .ai-note .ai-sign { display: flex; align-items: center; justify-content: center; color: #a855f7; font-size: 11px; text-shadow: 0 0 8px rgba(168,85,247,.45); }
+  .ai-note .ai-text { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 2px 10px; white-space: nowrap; overflow: hidden; font-family: var(--mono); font-size: 12px; line-height: 20px; color: #5b3f86; }
+  .ai-note .ai-badge { flex: none; padding: 0 5px; border-radius: 999px; font-size: 9px; line-height: 15px; font-weight: 750; letter-spacing: .04em; color: #6e40c9; background: linear-gradient(90deg,rgba(167,139,250,.2),rgba(232,121,249,.14)); box-shadow: inset 0 0 0 1px rgba(192,132,252,.24); }
+  .ai-note .ai-body { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
   /* review rail */
   .review-summary { padding: 14px; }
@@ -388,216 +358,28 @@
   }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
-  /* ================= AI native direction ================= */
-  body[data-direction="ai"] {
-    --bg: #faf8f4;
-    --topbar: rgba(250,248,244,.88);
-    --panel: #ffffff;
-    --panel-2: #fbf8f3;
-    --text: #241c17;
-    --muted: #776a5f;
-    --faint: #a39588;
-    --border: #eee4d8;
-    --border-soft: #f3eae0;
-    --accent: #8b5cf6;
-    --accent-soft: #f5efff;
-    --seg-bg: #f3ede5;
-    --note-bg: rgba(250,248,244,.9);
-    --radius: 16px;
-    --shadow: 0 18px 50px -32px rgba(70,45,20,.28);
-    --ai-text: #3b235f;
-  }
-  body[data-direction="ai"]::before {
-    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1;
-    background:
-      radial-gradient(900px 420px at 12% -8%, rgba(167,139,250,.18), transparent 60%),
-      radial-gradient(700px 380px at 92% 4%, rgba(236,72,153,.10), transparent 58%),
-      radial-gradient(700px 500px at 50% 110%, rgba(34,211,238,.07), transparent 60%);
-  }
-  body[data-direction="ai"] .topbar { border-bottom-color: var(--border-soft); }
-  body[data-direction="ai"] .app { grid-template-columns: 232px minmax(0,1fr) 362px; gap: 20px; padding: 22px; }
-  body[data-direction="ai"] .panel { border-color: var(--border-soft); }
-  body[data-direction="ai"] .pr-head { padding: 8px 4px 20px; }
-  body[data-direction="ai"] .pr-title {
-    font-size: 29px; letter-spacing: -.03em; line-height: 1.18;
-    background: linear-gradient(95deg, #2a2118 10%, #7c3aed 58%, #c026d3 92%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  body[data-direction="ai"] .pr-meta { font-size: 12.5px; }
-  body[data-direction="ai"] .tabs { margin-top: 18px; }
-  body[data-direction="ai"] .tab.active { border-bottom-color: #8b5cf6; }
-  body[data-direction="ai"] .progress { border-color: var(--border-soft); border-radius: 12px; padding: 11px 14px; }
-  body[data-direction="ai"] .file-card { border: 0; background: transparent; box-shadow: none; }
-  body[data-direction="ai"] .file-head { background: transparent; border: 0; padding: 0 4px 10px; }
-  body[data-direction="ai"] .hunk {
-    margin: 14px 0; border: 1px solid var(--border-soft); border-radius: 16px;
-    background: var(--panel); box-shadow: 0 16px 40px -30px rgba(80,50,20,.35); overflow: hidden;
-  }
-  body[data-direction="ai"] .hunk-head { background: linear-gradient(90deg, rgba(245,239,255,.9), rgba(253,244,255,.6)); border-bottom-color: var(--border-soft); padding: 9px 14px; }
-  body[data-direction="ai"] .row { min-height: 27px; }
-  body[data-direction="ai"] .row .code { font-size: 12.5px; line-height: 22px; padding-top: 2.5px; padding-bottom: 2.5px; }
-  body[data-direction="ai"] .ai-note {
-    align-items: flex-start; gap: 10px; margin: 8px 14px 11px; padding: 12px 14px 12px 16px;
-    border: 1px solid transparent; border-radius: 14px;
-    background:
-      linear-gradient(100deg, rgba(250,247,255,.98), rgba(255,247,253,.96) 52%, rgba(245,254,255,.96)) padding-box,
-      linear-gradient(100deg, rgba(167,139,250,.7), rgba(232,121,249,.5) 52%, rgba(103,232,249,.55)) border-box;
-    box-shadow: 0 14px 34px -26px rgba(124,58,237,.7);
-    font-size: 12.5px; line-height: 1.6; color: var(--ai-text);
-  }
-  body[data-direction="ai"] .ai-note::before { display: none; }
-  body[data-direction="ai"] .ai-spark { font-size: 15px; margin-top: 0; }
-  body[data-direction="ai"] .ai-badge { font-size: 9.5px; line-height: 17px; margin-top: 1px; background: linear-gradient(90deg,#7c3aed,#c026d3); color: #fff; box-shadow: none; }
-  body[data-direction="ai"] .review { background: linear-gradient(180deg,#fff 0%, #fdfaff 100%); }
-  body[data-direction="ai"] .review-summary { padding: 17px 16px; }
-  body[data-direction="ai"] .review-big { font-size: 17px; }
-  body[data-direction="ai"] .ai-panel-head { padding: 14px 16px; }
-  body[data-direction="ai"] .chat { max-height: 380px; padding: 0 16px 12px; gap: 10px; }
-  body[data-direction="ai"] .msg { font-size: 12px; }
-  body[data-direction="ai"] .msg .bubble { border-radius: 11px; padding: 8px 10px; }
-  body[data-direction="ai"] .ask { padding: 0 16px 16px; }
-  body[data-direction="ai"] .ask input { padding: 9px 10px; border-radius: 9px; font-size: 12px; }
-  body[data-direction="ai"] .ask button { border-radius: 9px; padding: 0 12px; }
-  body[data-direction="ai"] .waiter { border-style: solid; background: linear-gradient(100deg, rgba(167,139,250,.08), rgba(236,72,153,.05)); border-color: rgba(168,85,247,.18); }
-
-  /* ================= Sci-fi HUD direction ================= */
-  body[data-direction="sci-fi"] {
-    --bg: #05060f;
-    --topbar: rgba(5,6,15,.72);
-    --panel: rgba(13,17,34,.72);
-    --panel-2: rgba(20,26,50,.72);
-    --text: #e9e7ff;
-    --muted: #8f93b8;
-    --faint: #5f6488;
-    --border: rgba(139,124,255,.19);
-    --border-soft: rgba(139,124,255,.11);
-    --accent: #67e8f9;
-    --accent-soft: rgba(34,211,238,.09);
-    --green: #4ade80;
-    --green-bg: rgba(34,197,94,.13);
-    --green-gutter: rgba(34,197,94,.2);
-    --red: #fb7185;
-    --red-bg: rgba(244,63,94,.12);
-    --red-gutter: rgba(244,63,94,.18);
-    --purple: #a78bfa;
-    --purple-hot: #e879f9;
-    --cyan: #22d3ee;
-    --seg-bg: rgba(18,22,44,.8);
-    --note-bg: rgba(5,6,15,.6);
-    --ai-text: #e6dbff;
-    --shadow: 0 24px 70px -40px rgba(0,0,0,.9);
-    --scroll: rgba(139,124,255,.25);
-  }
-  body[data-direction="sci-fi"]::before {
-    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -2;
-    background-image:
-      linear-gradient(rgba(139,124,255,.055) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(139,124,255,.055) 1px, transparent 1px);
-    background-size: 42px 42px;
-    mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 78%);
-  }
-  body[data-direction="sci-fi"]::after {
-    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1;
-    background:
-      radial-gradient(760px 420px at 18% 0%, rgba(124,58,237,.22), transparent 62%),
-      radial-gradient(680px 380px at 88% 8%, rgba(34,211,238,.12), transparent 58%),
-      radial-gradient(600px 420px at 55% 110%, rgba(236,72,153,.08), transparent 62%);
-  }
-  body[data-direction="sci-fi"] .topbar { border-bottom-color: rgba(139,124,255,.2); }
-  body[data-direction="sci-fi"] .brand .mark { box-shadow: 0 0 24px rgba(168,85,247,.7); }
-  body[data-direction="sci-fi"] .directions { border-color: rgba(139,124,255,.18); }
-  body[data-direction="sci-fi"] .directions button.active {
-    background: rgba(139,124,255,.14); color: #f2edff;
-    box-shadow: inset 0 0 0 1px rgba(139,124,255,.32), 0 0 20px rgba(124,58,237,.18);
-  }
-  body[data-direction="sci-fi"] .paired { background: rgba(13,17,34,.7); border-color: rgba(139,124,255,.18); }
-  body[data-direction="sci-fi"] .panel {
-    background: var(--panel); border-color: var(--border);
-    box-shadow: var(--shadow), inset 0 0 0 1px rgba(139,124,255,.04);
-    backdrop-filter: blur(18px);
-  }
-  body[data-direction="sci-fi"] .panel-head { border-bottom-color: var(--border-soft); color: #cfc9ff; }
-  body[data-direction="sci-fi"] .file-item.active { background: rgba(139,124,255,.12); border-left-color: var(--purple-hot); }
-  body[data-direction="sci-fi"] .file-item:hover { background: rgba(139,124,255,.06); }
-  body[data-direction="sci-fi"] .pr-title { color: #f4f0ff; text-shadow: 0 0 30px rgba(167,139,250,.28); }
-  body[data-direction="sci-fi"] .pr-meta { color: #9a9dc4; }
-  body[data-direction="sci-fi"] .branch { color: #67e8f9; background: rgba(34,211,238,.08); }
-  body[data-direction="sci-fi"] .tabs { border-bottom-color: var(--border); }
-  body[data-direction="sci-fi"] .tab.active { color: #f0edff; border-bottom-color: #22d3ee; }
-  body[data-direction="sci-fi"] .progress { background: rgba(13,17,34,.6); border-color: var(--border-soft); }
-  body[data-direction="sci-fi"] .progress .bar { background: rgba(139,124,255,.12); }
-  body[data-direction="sci-fi"] .file-card { background: rgba(10,13,28,.62); border-color: var(--border); }
-  body[data-direction="sci-fi"] .file-head { background: rgba(15,19,38,.7); border-bottom-color: var(--border-soft); }
-  body[data-direction="sci-fi"] .hunk-head { background: rgba(34,211,238,.05); color: #8fa3d8; border-bottom-color: var(--border-soft); }
-  body[data-direction="sci-fi"] .row .ln { border-right-color: var(--border-soft); }
-  body[data-direction="sci-fi"] .row.add { background: var(--green-bg); }
-  body[data-direction="sci-fi"] .row.add .ln { background: var(--green-gutter); color: #86efac; }
-  body[data-direction="sci-fi"] .row.add .sign { color: #4ade80; }
-  body[data-direction="sci-fi"] .row.del { background: var(--red-bg); }
-  body[data-direction="sci-fi"] .row.del .ln { background: var(--red-gutter); color: #fda4af; }
-  body[data-direction="sci-fi"] .row.del .sign { color: #fb7185; }
-  body[data-direction="sci-fi"] .row.removed { background: rgba(244,63,94,.24); }
-  body[data-direction="sci-fi"] .row.removed .code { color: #ffd1d9; }
-  body[data-direction="sci-fi"] .row.selected { background: rgba(34,211,238,.14) !important; box-shadow: inset 2px 0 0 #22d3ee, inset 0 0 24px rgba(34,211,238,.08); }
-  body[data-direction="sci-fi"] .row.selected .ln { color: #67e8f9; }
-  body[data-direction="sci-fi"] .ai-note {
-    background:
-      linear-gradient(100deg, rgba(90,50,180,.22), rgba(180,40,130,.14) 52%, rgba(20,130,160,.12)) padding-box,
-      linear-gradient(100deg, rgba(167,139,250,.75), rgba(232,121,249,.55) 52%, rgba(103,232,249,.6)) border-box;
-    border: 1px solid transparent; border-radius: 9px;
-    box-shadow: 0 0 26px -10px rgba(168,85,247,.45), inset 0 0 20px rgba(139,124,255,.06);
-    color: #e9ddff; backdrop-filter: blur(8px);
-  }
-  body[data-direction="sci-fi"] .ai-note::before { display: none; }
-  body[data-direction="sci-fi"] .ai-badge { color: #c4b5fd; background: rgba(139,92,246,.18); box-shadow: inset 0 0 0 1px rgba(196,181,253,.28); }
-  body[data-direction="sci-fi"] .review-summary, body[data-direction="sci-fi"] .review-files { border-color: var(--border-soft); }
-  body[data-direction="sci-fi"] .review-big { color: #f3efff; }
-  body[data-direction="sci-fi"] .waiter { border-color: rgba(139,124,255,.26); background: rgba(13,17,34,.5); color: #9fa3c9; }
-  body[data-direction="sci-fi"] .waiter .pulse { background: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,.14), 0 0 16px rgba(34,211,238,.8); }
-  body[data-direction="sci-fi"] .ai-panel-head { color: #e9e7ff; }
-  body[data-direction="sci-fi"] .orb { box-shadow: 0 0 22px rgba(168,85,247,.8), inset 0 0 8px rgba(255,255,255,.5); }
-  body[data-direction="sci-fi"] .msg .bubble { background: rgba(20,26,50,.9); color: #ddd9ff; }
-  body[data-direction="sci-fi"] .msg.ai .bubble { background: rgba(90,50,180,.16); box-shadow: inset 0 0 0 1px rgba(139,124,255,.2); }
-  body[data-direction="sci-fi"] .ask input { background: rgba(8,11,24,.8); border-color: var(--border); color: #e9e7ff; }
-  body[data-direction="sci-fi"] .ask input:focus { border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,.1); }
-  body[data-direction="sci-fi"] .selection-bar { background: rgba(8,11,24,.92); box-shadow: 0 18px 50px rgba(0,0,0,.6), inset 0 0 0 1px rgba(139,124,255,.3), 0 0 34px rgba(124,58,237,.22); }
-  body[data-direction="sci-fi"] .selection-bar .sel-count { color: #67e8f9; }
-  body[data-direction="sci-fi"] .selection-bar .sel-btn.primary { background: linear-gradient(90deg,#7c3aed,#d946ef 55%,#22d3ee); }
-  body[data-direction="sci-fi"] .suggestion { background: rgba(10,13,28,.85); border-color: rgba(139,124,255,.22); }
-  body[data-direction="sci-fi"] .suggestion-head { background: rgba(139,124,255,.1); color: #c4b5fd; }
-  body[data-direction="sci-fi"] .why { background: rgba(13,17,34,.6); border-color: var(--border-soft); }
-  body[data-direction="sci-fi"] .btn { background: rgba(13,17,34,.7); border-color: var(--border); color: #ddd9ff; }
-  body[data-direction="sci-fi"] .btn:hover { background: rgba(139,124,255,.1); }
-  body[data-direction="sci-fi"] .btn.ok { color: #86efac; border-color: rgba(74,222,128,.3); background: rgba(34,197,94,.08); }
-  body[data-direction="sci-fi"] .btn.no { color: #fda4af; border-color: rgba(251,113,133,.3); background: rgba(244,63,94,.07); }
-  body[data-direction="sci-fi"] .toast { background: rgba(8,11,24,.96); box-shadow: 0 18px 50px rgba(0,0,0,.6), inset 0 0 0 1px rgba(139,124,255,.28); }
-
   @media (max-width: 1200px) {
-    .app, body[data-direction="ai"] .app { grid-template-columns: 230px minmax(0,1fr); }
+    .app { grid-template-columns: 230px minmax(0,1fr); }
     .review { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; }
     .review > .panel-head { grid-column: 1 / -1; }
   }
   @media (max-width: 860px) {
     .topbar { padding: 0 12px; gap: 10px; overflow-x: auto; }
     .brand .subtle, .passkey { display: none; }
-    .app, body[data-direction="ai"] .app { grid-template-columns: 1fr; padding: 12px; }
+    .app { grid-template-columns: 1fr; padding: 12px; }
     .files, .review { grid-column: auto; }
     .review { display: block; }
     .pr-title { font-size: 21px; }
   }
 </style>
 </head>
-<body data-direction="github">
+<body>
   <header class="topbar">
     <div class="brand">
       <span class="mark">CE</span>
-      <span>Coding Enhanced</span><span class="slash">/</span><span class="subtle">Review UI directions</span>
+      <span>Coding Enhanced</span><span class="slash">/</span><span class="subtle">Review · GitHub native</span>
     </div>
-    <nav class="directions" id="directions">
-      <button data-dir="github" class="active">GitHub 原生</button>
-      <button data-dir="ai">AI 原生</button>
-      <button data-dir="sci-fi">科幻 HUD</button>
-    </nav>
+    <span class="gh-pill">GitHub 原生</span>
     <div class="top-actions">
       <span class="paired"><span class="dot"></span>Paired · @xthw</span>
       <span class="passkey">Passkey</span>
@@ -605,10 +387,10 @@
     </div>
   </header>
 
-  <div class="direction-note" id="directionNote">
-    <strong id="directionName">GitHub 原生</strong>
-    <span id="directionDesc">熟悉的 GitHub 语法，信息密度高，适合先落进 DSH 侧栏。</span>
-    <span class="tag" id="directionTag">Best for DSH tab</span>
+  <div class="direction-note">
+    <strong>GitHub 原生</strong>
+    <span>AI 说明改成普通 diff 行：紫色底、✦ 符号、AI 小标签，单行省略，不打断代码。</span>
+    <span class="tag">Selected direction</span>
   </div>
 
   <div class="app" id="app" data-dim="on">
@@ -637,7 +419,11 @@
           <div class="check"><span class="ok">✓</span> 2 files queued</div>
         </div>
       </div>
-      <div class="why" id="why"></div>
+      <div class="why" id="why">
+        <div class="why-title">Why GitHub 原生</div>
+        <ul><li>熟悉的分栏 + diff 语法</li><li>AI 说明只换颜色，不换节奏</li><li>实现风险最低，先落进 DSH 侧栏</li></ul>
+        <div class="tradeoff">AI 说明不再是大卡片：一行高度、紫色底、悬停看全文。</div>
+      </div>
     </aside>
 
     <main class="main">
@@ -790,32 +576,8 @@ const files = [
   },
 ];
 
-const directions = {
-  github: {
-    name: 'GitHub 原生',
-    desc: '熟悉的 GitHub 语法，信息密度高，适合先落进 DSH 侧栏。',
-    tag: 'Best for DSH tab',
-    why: ['熟悉的分栏 + diff 语法', '信息密度最高，一屏能看很多', '实现风险最低，离现有 tab 最近'],
-    tradeoff: 'AI 感较弱；和普通代码审查工具区分度最低。',
-  },
-  ai: {
-    name: 'AI 原生',
-    desc: '解释优先：hunk 变成卡片，AI 说明更突出，右侧是常驻审阅对话。',
-    tag: 'Best for web app',
-    why: ['AI 解释是第一公民', 'diff 与对话在同一视线内', '适合独立 Web 端和更长的阅读'],
-    tradeoff: '纵向空间占用更大；信息密度低于 GitHub 风格。',
-  },
-  'sci-fi': {
-    name: '科幻 HUD',
-    desc: '深色玻璃 + 霓虹渐变，行选择像操作 HUD；最有产品感但最重。',
-    tag: 'Optional theme',
-    why: ['视觉记忆点最强', '行范围选择/发光反馈很出彩', '适合演示、直播与重度用户'],
-    tradeoff: '长时间阅读更累；维护和可访问性成本最高。',
-  },
-};
 
 let activeId = files[0].id;
-let direction = 'github';
 let dim = true;
 let selection = null;
 let selecting = false;
@@ -872,7 +634,7 @@ function rowHtml(line, index) {
       <span class="code">${esc(line.x) || ' '}</span>
       ${line.removed ? '<span class="row-removed">removed this round</span>' : ''}
     </div>
-    ${note ? `<div class="ai-note" data-note-line="${note.line}"><span class="ai-spark">✦</span><span class="ai-badge">AI</span><span class="ai-text">${esc(note.text)}</span></div>` : ''}
+    ${note ? `<div class="ai-note" data-note-line="${note.line}" title="${esc(note.text)}"><span class="ai-no"></span><span class="ai-no"></span><span class="ai-sign">✦</span><span class="ai-text"><span class="ai-badge">AI</span><span class="ai-body">${esc(note.text)}</span></span></div>` : ''}
   `;
 }
 
@@ -991,7 +753,8 @@ function explainSelection() {
     : '这段改动属于冒泡排序的核心通路：复制输入、相邻比较交换、swapped 提前退出。AI 解释跟着具体行走，选中范围可以直接追问。';
   const note = document.createElement('div');
   note.className = 'ai-note selection-note';
-  note.innerHTML = `<span class="ai-spark">✦</span><span class="ai-badge">AI</span><span class="ai-text">${esc(text)}</span>`;
+  note.title = text;
+  note.innerHTML = `<span class="ai-no"></span><span class="ai-no"></span><span class="ai-sign">✦</span><span class="ai-text"><span class="ai-badge">AI</span><span class="ai-body">${esc(text)}</span></span>`;
   endRow.insertAdjacentElement('afterend', note);
   addChat('user', `Explain lines ${range}`);
   addChat('ai', text);
@@ -1019,26 +782,9 @@ function suggestSelection() {
   selectionBar.classList.remove('show');
 }
 
-function setDirection(next) {
-  direction = next;
-  document.body.dataset.direction = next;
-  $$('#directions button').forEach((button) => button.classList.toggle('active', button.dataset.dir === next));
-  const data = directions[next];
-  $('#directionName').textContent = data.name;
-  $('#directionDesc').textContent = data.desc;
-  $('#directionTag').textContent = data.tag;
-  $('#why').innerHTML = `
-    <div class="why-title">Why this direction</div>
-    <ul>${data.why.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>
-    <div class="tradeoff">${esc(data.tradeoff)}</div>
-  `;
-}
 
 // events
-$('#directions').addEventListener('click', (event) => {
-  const button = event.target.closest('button[data-dir]');
-  if (button) setDirection(button.dataset.dir);
-});
+
 fileList.addEventListener('click', (event) => {
   const item = event.target.closest('[data-file]');
   if (!item) return;
@@ -1112,7 +858,6 @@ function sendAsk() {
 $$('[data-toast]').forEach((button) => button.addEventListener('click', () => toast(button.dataset.toast)));
 
 // initial
-setDirection('github');
 renderFiles();
 renderFile();
 renderReviewFiles();
