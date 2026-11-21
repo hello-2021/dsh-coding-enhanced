@@ -72,6 +72,11 @@ tab, and nothing touches disk until you finish.
    by the plugin's tool gate. Turning the switch off returns it to native
    editing. Shell commands (`bash`, `sed`, …) are outside the review.
 
+Both tools accept an optional `notes` array. Each note is anchored to a
+new-file `line` (recommended) or a 1-based `hunk`; the review diff renders it as
+a gradient-purple **AI explanation** row under the corresponding group of added
+lines. The agent is prompted to add one short note per added group.
+
 **Review tab**
 
 - Opens as a **right-sidebar tab**, like a file preview — not a pop-up.
