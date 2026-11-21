@@ -276,9 +276,8 @@
   }
   .ai-note:hover { background: linear-gradient(90deg, rgba(124,58,237,.15), rgba(217,70,239,.10) 55%, rgba(34,211,238,.07)); }
   .ai-note .ai-no { background: rgba(168,85,247,.10); border-right: 1px solid var(--border-soft); }
-  .ai-note .ai-sign { display: flex; align-items: center; justify-content: center; color: #a855f7; font-size: 11px; text-shadow: 0 0 8px rgba(168,85,247,.45); }
+  .ai-note .ai-sign { display: flex; align-items: center; justify-content: center; color: #7c3aed; font-size: 9px; font-weight: 800; letter-spacing: .02em; text-shadow: 0 0 8px rgba(168,85,247,.35); }
   .ai-note .ai-text { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 2px 10px; white-space: nowrap; overflow: hidden; font-family: var(--mono); font-size: 12px; line-height: 20px; color: #5b3f86; }
-  .ai-note .ai-badge { flex: none; padding: 0 5px; border-radius: 999px; font-size: 9px; line-height: 15px; font-weight: 750; letter-spacing: .04em; color: #6e40c9; background: linear-gradient(90deg,rgba(167,139,250,.2),rgba(232,121,249,.14)); box-shadow: inset 0 0 0 1px rgba(192,132,252,.24); }
   .ai-note .ai-body { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
   /* review rail */
@@ -389,7 +388,7 @@
 
   <div class="direction-note">
     <strong>GitHub 原生</strong>
-    <span>AI 说明改成普通 diff 行：紫色底、✦ 符号、AI 小标签，单行省略，不打断代码。</span>
+    <span>AI 说明改成普通 diff 行：紫色底，符号列就是 AI，单行省略，不打断代码。</span>
     <span class="tag">Selected direction</span>
   </div>
 
@@ -634,7 +633,7 @@ function rowHtml(line, index) {
       <span class="code">${esc(line.x) || ' '}</span>
       ${line.removed ? '<span class="row-removed">removed this round</span>' : ''}
     </div>
-    ${note ? `<div class="ai-note" data-note-line="${note.line}" title="${esc(note.text)}"><span class="ai-no"></span><span class="ai-no"></span><span class="ai-sign">✦</span><span class="ai-text"><span class="ai-badge">AI</span><span class="ai-body">${esc(note.text)}</span></span></div>` : ''}
+    ${note ? `<div class="ai-note" data-note-line="${note.line}" title="${esc(note.text)}"><span class="ai-no"></span><span class="ai-no"></span><span class="ai-sign">AI</span><span class="ai-text"><span class="ai-body">${esc(note.text)}</span></span></div>` : ''}
   `;
 }
 
@@ -754,7 +753,7 @@ function explainSelection() {
   const note = document.createElement('div');
   note.className = 'ai-note selection-note';
   note.title = text;
-  note.innerHTML = `<span class="ai-no"></span><span class="ai-no"></span><span class="ai-sign">✦</span><span class="ai-text"><span class="ai-badge">AI</span><span class="ai-body">${esc(text)}</span></span>`;
+  note.innerHTML = `<span class="ai-no"></span><span class="ai-no"></span><span class="ai-sign">AI</span><span class="ai-text"><span class="ai-body">${esc(text)}</span></span>`;
   endRow.insertAdjacentElement('afterend', note);
   addChat('user', `Explain lines ${range}`);
   addChat('ai', text);

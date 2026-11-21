@@ -11,7 +11,7 @@ The AI explanation is no longer a card. It is a **normal diff row**:
 
 - same grid and line height as the code rows;
 - a subtle violet → fuchsia → cyan gradient tint;
-- a 2px violet edge, `✦` in the sign column, and a tiny `AI` badge;
+- a 2px violet edge and `AI` in the sign column (no badge inside the text);
 - one line of text with ellipsis; hover the row to read the full explanation;
 - no margin, border radius, shadow or card chrome.
 
