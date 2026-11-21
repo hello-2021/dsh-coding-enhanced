@@ -209,7 +209,7 @@ paste its URL; use this when you want a fixed version:
 dsh plugin --profile desktop add https://github.com/hello-2021/dsh-coding-enhanced/releases/download/v<version>/dsh-coding-enhanced-<version>.tgz
 ```
 
-> **Available on npm:** `dsh plugin add dsh-coding-enhanced` (0.5.15).
+> **Available on npm:** `dsh plugin add dsh-coding-enhanced` (0.5.16).
 
 **CLI (local tarball)**
 
@@ -223,7 +223,7 @@ recomposition or restart.
 
 **Install by package name (npm)**
 
-The package is published on npm as `dsh-coding-enhanced` (0.5.15). The Add
+The package is published on npm as `dsh-coding-enhanced` (0.5.16). The Add
 plugin box accepts the bare name, and
 `dsh plugin add dsh-coding-enhanced` works.
 
@@ -408,17 +408,17 @@ workflow, rebuild and reinstall after each change.
 
 ### Publishing
 
-The package is published (0.5.15). Future releases can be published by tagging
-(`v<version>`) and letting the workflow run, or manually:
+The package is published (0.5.16). Future releases are published by tagging
+(`v<version>`) and letting the workflow run; the workflow uses Trusted
+Publishing (OIDC), so no long-lived npm token is needed:
 
 ```sh
 npm publish --access public
 ```
 
-The current workflow reads `NPM_TOKEN`. Bypass-2FA tokens are being retired:
-npm revokes direct-publish bypass tokens in January 2027. Prefer a GitHub
-Actions **Trusted Publisher** (OIDC) on the package settings and the workflow
-example in `docs/`/upstream npm docs; or keep the token as a temporary bridge.
+The trusted publisher is configured on the package settings for the
+`npm-publish.yml` workflow; the workflow has `id-token: write` and needs no
+`NPM_TOKEN`. Tag `v<version>` to publish.
 
 After a release, regenerate the market index and commit it:
 

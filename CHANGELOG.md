@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.16
+
+- Publish from GitHub Actions with npm Trusted Publishing (OIDC); the workflow
+  no longer reads a long-lived `NPM_TOKEN`.
+- README: the package is available on npm; install by name.
+- Version 0.5.16.
+
 ## 0.5.15
 
 - Restore the native tool gate: while AI Change Review and the input-bar Auto
