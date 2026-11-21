@@ -209,7 +209,8 @@ paste its URL; use this when you want a fixed version:
 dsh plugin --profile desktop add https://github.com/hello-2021/dsh-coding-enhanced/releases/download/v<version>/dsh-coding-enhanced-<version>.tgz
 ```
 
-> **Available on npm:** `dsh plugin add dsh-coding-enhanced` (0.5.16).
+> **Direct npm install is planned.** Once the package is published,
+> `dsh plugin add dsh-coding-enhanced` will work without a URL.
 
 **CLI (local tarball)**
 
@@ -220,28 +221,6 @@ dsh plugin --profile desktop add /path/to/dsh-coding-enhanced-<version>.tgz
 **Development link** — in the same Add plugin dialog, use the absolute path of
 this directory. DSH installs a link, so source edits apply on the next
 recomposition or restart.
-
-**Install by package name (npm)**
-
-The package is published on npm as `dsh-coding-enhanced` (0.5.16). The Add
-plugin box accepts the bare name, and
-`dsh plugin add dsh-coding-enhanced` works.
-
-**Discover / plugin market**
-
-DSH's **Discover** tab is a reader for plugin **index JSON** files; the app does
-not ship a central community catalog. Official entries are built into DSH;
-third-party plugins become discoverable by publishing an index and sharing its
-URL. This repository ships a format-1 index pinned to the v0.5.15 commit:
-
-1. Enable **Plugins → More → Experimental plugins → Custom plugin indexes**.
-2. Open **Discover → Add index source** and paste:
-   `https://raw.githubusercontent.com/hello-2021/dsh-coding-enhanced/main/market/index.json`
-3. Install **Coding Enhanced** from the index.
-
-The index installs the pinned git commit, so it works before the package is on
-npm. Regenerate it for a release with
-`node scripts/market-index.mjs v<version>`.
 
 ### 2. Choose features
 
@@ -405,26 +384,6 @@ npm run pack          # dist/dsh-coding-enhanced-<version>.tgz
 For fast iteration, install this directory as a **link** through
 **Plugins → Add plugin** and edit the source directly. When using the tarball
 workflow, rebuild and reinstall after each change.
-
-### Publishing
-
-The package is published (0.5.16). Future releases are published by tagging
-(`v<version>`) and letting the workflow run; the workflow uses Trusted
-Publishing (OIDC), so no long-lived npm token is needed:
-
-```sh
-npm publish --access public
-```
-
-The trusted publisher is configured on the package settings for the
-`npm-publish.yml` workflow; the workflow has `id-token: write` and needs no
-`NPM_TOKEN`. Tag `v<version>` to publish.
-
-After a release, regenerate the market index and commit it:
-
-```sh
-node scripts/market-index.mjs v<version>
-```
 
 ---
 
