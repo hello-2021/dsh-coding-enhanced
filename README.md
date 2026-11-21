@@ -259,7 +259,12 @@ Ask the agent to change files → it queues them with `review_write` / `review_p
 ### 5. Use withdraw
 
 Click the undo icon in the assistant action row on the latest completed turn →
-confirm.
+confirm. Before the files are restored, the plugin snapshots the current
+workspace as a pre-withdraw backup. After a withdrawal, the `Withdrawn` action
+row offers **Restore pre-withdraw files**; it restores the files only, and the
+turn stays hidden from the model. If a rewind spans turns without snapshots
+(the plugin was off, installed later, or snapshots were pruned), the
+confirmation lists those turns.
 
 > Uninstall at any time from **Plugins → dsh-coding-enhanced → Remove**. Your
 > `$DSH_HOME/coding-enhanced` state is left in place.
