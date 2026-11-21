@@ -74,8 +74,8 @@ tab, and nothing touches disk until you finish.
 
 Both tools accept an optional `notes` array. Each note is anchored to a
 new-file `line` (recommended) or a 1-based `hunk`; the review diff renders it as
-a gradient-purple **AI explanation** row under the corresponding group of added
-lines. The agent is prompted to add one short note per added group.
+a gradient-purple **AI explanation** row immediately after that added line
+(inside the green group); a hunk-only note goes after the group. The agent is prompted to add one short note per added group.
 
 **Review tab**
 
