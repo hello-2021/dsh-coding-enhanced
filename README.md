@@ -209,8 +209,7 @@ paste its URL; use this when you want a fixed version:
 dsh plugin --profile desktop add https://github.com/hello-2021/dsh-coding-enhanced/releases/download/v<version>/dsh-coding-enhanced-<version>.tgz
 ```
 
-> **npm install by name is prepared but not published.** The unscoped name
-> `dsh-coding-enhanced` is currently free; see **Publishing** below.
+> **Available on npm:** `dsh plugin add dsh-coding-enhanced` (0.5.15).
 
 **CLI (local tarball)**
 
@@ -224,10 +223,9 @@ recomposition or restart.
 
 **Install by package name (npm)**
 
-The package is **not on npm yet**; the unscoped name `dsh-coding-enhanced` is
-currently free. Once published with `npm publish --access public`, the Add
-plugin box accepts the bare name `dsh-coding-enhanced` (and
-`dsh plugin add dsh-coding-enhanced` works).
+The package is published on npm as `dsh-coding-enhanced` (0.5.15). The Add
+plugin box accepts the bare name, and
+`dsh plugin add dsh-coding-enhanced` works.
 
 **Discover / plugin market**
 
@@ -410,16 +408,17 @@ workflow, rebuild and reinstall after each change.
 
 ### Publishing
 
-The npm name is free but the package is not published yet. Two ways:
+The package is published (0.5.15). Future releases can be published by tagging
+(`v<version>`) and letting the workflow run, or manually:
 
 ```sh
-npm login
 npm publish --access public
 ```
 
-or add a repository secret `NPM_TOKEN` (an npm automation/granular token with
-publish rights); `.github/workflows/npm-publish.yml` publishes on every `v*` tag
-and on manual dispatch. Without the secret that workflow fails.
+The current workflow reads `NPM_TOKEN`. Bypass-2FA tokens are being retired:
+npm revokes direct-publish bypass tokens in January 2027. Prefer a GitHub
+Actions **Trusted Publisher** (OIDC) on the package settings and the workflow
+example in `docs/`/upstream npm docs; or keep the token as a temporary bridge.
 
 After a release, regenerate the market index and commit it:
 
