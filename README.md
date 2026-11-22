@@ -17,7 +17,7 @@ Queue every AI edit · rewind whole turns · hand review to a non-blocking waite
 
 `dsh-coding-enhanced` is **not another AI PR reviewer**. It is a **workflow layer for DSH agents**, shipped as one installable plugin:
 
-- **Pre-write change gate** — native `write` / `edit` / `apply_patch` are refused while Auto review is on; the agent queues `review_write` / `review_patch`; nothing lands until you Finish.
+- **Pre-write change gate** — native `write` / `edit` / `apply_patch` are refused while Pre-review is on; the agent queues `review_write` / `review_patch`; nothing lands until you Finish.
 - **Workspace time machine** — per-turn shadow-git snapshots, multi-turn withdraw, a pre-withdraw backup, and a gap warning when a rewind crosses turns without snapshots.
 - **Non-blocking review handoff** — one persistent review waiter subagent holds the wait; the main agent can keep chatting or end the turn; the waiter wakes it with the per-file results.
 - **Remote + cross-AI (next)** — passkey-paired always-on web review, line-level AI comments (B), and an adversarial AI cross-review API.
@@ -278,7 +278,7 @@ Settings apply immediately and persist in `$DSH_HOME/coding-enhanced/settings.js
 Next to the model selector at the bottom-right of the message input, the shield
 button opens **Review tools**:
 
-| Auto review | What the agent gets |
+| Pre-review | What the agent gets |
 |---|---|
 | **on** | a system-prompt instruction to queue every edit with `review_write` / `review_patch`, then call `review_wait` and wait; the review tools are available |
 | **off** | the review tools are not exposed; the agent uses normal `write` / `edit` |
@@ -363,10 +363,10 @@ tools/pre-execute ── waits for your decision
 
 ## ⚠️ Limits
 
-- While **AI Change Review** and the input-bar **Auto review** switch are on,
+- While **AI Change Review** and the input-bar **Pre-review** switch are on,
   native `write` / `edit` / `apply_patch` are refused by the plugin's
   `tools/pre-execute` policy; the agent must use `review_write` /
-  `review_patch`. Turning Auto review off allows native editing again. Shell
+  `review_patch`. Turning Pre-review off allows native editing again. Shell
   commands (`bash`, `sed`, `rm`, …) are not intercepted.
 - **Editable text is capped at 200 KiB** per file. Binary and larger files are
   review-only.
