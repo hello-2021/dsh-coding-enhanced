@@ -407,8 +407,9 @@ already covers the “beautiful diff panel” case. Next:
 - **P4 — external AI adversarial cross-review**: review-scoped tokens,
   participants, verdicts, proposals.
 
-See [the architecture](docs/web-review-architecture.md) and [the prior-art
-survey](docs/prior-art.md).
+See [the architecture](docs/web-review-architecture.md), [the prior-art
+survey](docs/prior-art.md), and [the review contract](docs/review-prompts-and-chain.md)
+for the exact prompts and the full chain.
 
 ## 🛠️ Development
 
