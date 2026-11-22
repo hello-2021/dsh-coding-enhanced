@@ -64,7 +64,7 @@
 
 | 插件 | 做什么 | 和我们的关系 |
 |---|---|---|
-| [`bycall/dsh-answer-reviewer`](https://github.com/bycall/dsh-answer-reviewer) | 每个最终 assistant turn 由独立 LLM 重新审查，1–100 打分；低于阈值把 agent 拉回修改 | 直接对应我们“AI pre-review + 评分”的未来想法 |
+| [`bycall/dsh-answer-reviewer`](https://github.com/bycall/dsh-answer-reviewer) | 每个最终 assistant turn 由独立 LLM 重新审查，1–100 打分；低于阈值把 agent 拉回修改 | 直接对应我们“AI 改动预审查 + 评分”的未来想法 |
 | [`CAI-MH/dsh-quality-review`](https://github.com/CAI-MH/dsh-quality-review) | 每个 turn 后独立 reviewer 审查，最多 2 轮，SOP 规则注入 | 答案质量 review |
 | [`ccll/dsh-advisor-flow`](https://github.com/ccll/dsh-advisor-flow) | executor / advisor：关键时刻 ask_advisor；拦截重复工具调用做 advisor review，proceed/revise/blocked | 对抗式二次意见的 prior art |
 | [`suifei/dsh-pmo-button`](https://github.com/suifei/dsh-pmo-button) | 给 session 加一个**持久 PMO reviewer 子 agent**，每轮审查，STATUS: CONTINUE/DONE/NEED_HUMAN | 持久 reviewer 子 agent 的 prior art |
