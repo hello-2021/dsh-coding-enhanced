@@ -1,6 +1,6 @@
 {
   "name": "dsh-coding-enhanced",
-  "version": "0.6.6",
+  "version": "0.7.0",
   "description": "The DSH change gate: queue AI edits before write, rewind turns with shadow-git snapshots, and hand review to a non-blocking waiter subagent.",
   "type": "module",
   "main": "lib/index.js",

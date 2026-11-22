@@ -265,6 +265,7 @@ Open **Settings → Coding Enhanced** (the same controls appear on the plugin's 
 | Setting | Default | What it does |
 |---|---|---|
 | **Change gate** (`AI Change Review`) | on | the pre-write review gate for `review_write` / `review_patch` |
+| **AI explanations** | on | require a short note for every added group; off = queue without notes and hide the AI rows |
 | **Workspace time machine** (`Turn Withdraw`) | on | turn-start snapshots, multi-turn withdraw and the restore action |
 | **Turns kept for withdraw** | 10 | how many recent turns stay withdrawable (1–50) |
 | **Snapshot nested git repositories** | on | include nested repositories' working files (excluding `.git`) |
