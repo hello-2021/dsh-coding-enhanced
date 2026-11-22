@@ -272,6 +272,7 @@ Open **Settings → Coding Enhanced** (the same controls appear on the plugin's 
 | **Automatic cleanup** | on | run `git gc` on shadow snapshots after pruning or withdrawing |
 | **Clean up now** | — | prune extra snapshots and compact every shadow repository |
 | **Updates** | — | check npm for the latest release and install it from the settings card; restart DSH after updating |
+| **Review shell** | on | native `bash` is denied while Pre-review is on; commands go through `review_bash` (write detection + confirmation) |
 
 Settings apply immediately and persist in `$DSH_HOME/coding-enhanced/settings.json`.
 

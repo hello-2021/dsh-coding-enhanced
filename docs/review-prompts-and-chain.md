@@ -1,6 +1,6 @@
 # Review contract: prompts & chain
 
-> Version: **0.8.4** · Date: 2026-11-22 · Source: `dsh-coding-enhanced`
+> Version: **0.8.5** · Date: 2026-11-22 · Source: `dsh-coding-enhanced`
 >
 > This document records the exact prompts, tool contracts and execution chain
 > of the AI change-review workflow. It is intended as a reference for
@@ -304,9 +304,39 @@ dropped:
 - npm publishing uses Trusted Publishing (OIDC); the registry CDN may lag a few
   minutes after the workflow succeeds.
 - The review contract is versioned with the plugin; this document describes
-  0.8.4.
+  0.8.5.
 
 ---
+
+## 7.1 Shell gate (0.8.5)
+
+Native `bash` is denied while Pre-review is on. All commands go through the
+plugin tool `review_bash`:
+
+```text
+review_bash({ command, confirmed?, cwd? })
+```
+
+- First call: write detection only, no execution. Returns the reasons and a
+  self-check prompt.
+- The agent self-checks whether the command creates/modifies/deletes files.
+- If it writes source: use `review_write` / `review_patch`.
+- If it writes nothing: call again with `confirmed: true`.
+- Second call: re-detect, then run `/bin/sh -c` with the session cwd.
+
+Write detection covers shell redirection, `tee`, `sed -i`, `perl -i`,
+`cp/mv/rm/rmdir/mkdir/touch/ln/chmod`, `git apply`, `patch`, dependency
+installs, and inline Python/Node writes. Writes under `dist`, `build`, `out`,
+`target`, `node_modules`, `.next`, `.cache`, `coverage`, `.vitest`,
+`__pycache__`, `.pytest_cache`, `.turbo` are build/test artifacts and pass.
+
+### Post-turn audit
+
+At `turn/end` the host diffs the turn-start snapshot against the current
+workspace, subtracts reviewed paths and artifact paths, and stores the
+remaining files as `audits[sessionId].outside`. The review tab shows a warning
+listing them; the user can withdraw the turn or accept. The audit is a
+backstop for writes the shell detection missed; it does not auto-revert.
 
 ## 8. Version history (review workflow)
 
@@ -317,3 +347,4 @@ dropped:
 | 0.8.0–0.8.2 | Plugin-owned persistent waiter via `ctx.subagents` (agent-scoped tool, `spawn`) |
 | 0.8.3 | Parent-written explanations; per-file notes validation; comment subagent dropped |
 | 0.8.4 | Copy fixes; this document |
+| 0.8.5 | Native bash denied; `review_bash` with two-step confirmation and write detection; post-turn audit; read/edit/run prompt |

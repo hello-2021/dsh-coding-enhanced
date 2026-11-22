@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.5
+
+- Native `bash` is denied while Pre-review is on; shell commands go through
+  `review_bash`, which detects writes and asks for a second confirmation.
+- Build/test artifacts (`dist`, `build`, `node_modules`, ...) are allowed;
+  writes to source are blocked.
+- Audit changes at `turn/end` against the turn-start snapshot and warn about
+  files changed outside review.
+- Update the review prompt to read / review tools / review_bash.
+
 ## 0.5.15
 
 - Restore the native tool gate: while AI Change Review and the input-bar Auto
