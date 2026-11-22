@@ -60,11 +60,13 @@ tab, and nothing touches disk until you finish.
    only queue the proposal — they never write.
 2. All queued changes appear in the **same** right-sidebar review tab, even
    when the agent proposes them across several steps.
-3. When it has finished proposing, the agent starts a **review waiter
-   subagent**. The waiter calls `review_wait` with the `reviewId` and `waitKey`
-   from the tool result and waits. The main agent can keep chatting or end the
-   turn; when the review finishes, the waiter returns and wakes it. If
-   delegation is unavailable, **`review_wait`** blocks the main agent as before.
+3. When it has finished proposing, the agent uses **one persistent review
+   waiter subagent per conversation**. It starts the waiter once, then sends
+   each new `reviewId` and `waitKey` to the same child with `send_message` (no
+   new subagent task per review). The waiter calls `review_wait` with both and
+   waits; the main agent can keep chatting or end the turn. When the review
+   finishes, the waiter returns and wakes it. If delegation is unavailable,
+   **`review_wait`** blocks the main agent as before.
 4. You **Approve**, **Reject** (with instructions), or **Edit** each file, then
    **Finish**. Approved and hand-edited files are written; rejected files are
    not. `review_wait` returns one structured result per file

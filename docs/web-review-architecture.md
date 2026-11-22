@@ -2,7 +2,7 @@
 
 > 对应需求第 2 项（独立 Web review 端）；第 3 项（review 子 agent 非阻塞）作为等待机制一并纳入。
 > UI 方向已确定为 **GitHub 原生 + 紧凑 AI 说明行**，交互演示见 [`docs/ui-directions/index.html`](ui-directions/index.html)。
-> 状态：Web 端设计稿；纯插件版的非阻塞 review waiter 已在 **0.6.0** 实现。
+> 状态：Web 端设计稿；纯插件版的非阻塞 review waiter 已在 **0.6.0** 实现；**0.6.1** 改为每会话一个持久 waiter。
 
 ---
 
@@ -337,7 +337,16 @@ sequenceDiagram
 - 如果主 agent 仍在同一轮，下一步就会收到完成通知；
 - 主 agent 也可以在等待期间继续做别的工作，不阻塞。
 
-### 8.3 Fallback
+### 8.3 持久化 waiter（避免刷屏）
+
+- 每个会话只保留一个 **persistent review waiter** 子 agent；
+- 第一次：主 agent 用 `subagent` 起它，prompt 说明“收到带 reviewId/waitKey 的消息就 review_wait，处理一个 review，报告结果，等待下一条消息”；
+- 后续 review：主 agent 用 `send_message` 把新的 `reviewId + waitKey` 发给同一个 child，不再新建子 agent；
+- child id 保存在主 agent 的对话上下文里；如果 child 丢失/失败，再重新 spawn 一个；
+- 子 agent 一次处理一个 review；如果前一个还没结束，新消息会排队，review 结束后继续；
+- 代价：child 的上下文会累积；长时间会话可让它只保留最近 N 次 review 的摘要。
+
+### 8.4 Fallback
 
 - 子 agent 启动失败 / 达到 depth cap / subagent 不可用：主 AI 回退到直接 `review_wait`（阻塞），或告知用户 review 在后台、稍后继续；
 - 子 agent 被 abort：review 仍打开；主 AI 可再起一个 waiter，或直接 `review_wait`；
