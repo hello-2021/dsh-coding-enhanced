@@ -60,8 +60,11 @@ tab, and nothing touches disk until you finish.
    only queue the proposal — they never write.
 2. All queued changes appear in the **same** right-sidebar review tab, even
    when the agent proposes them across several steps.
-3. When it has finished proposing, the agent calls **`review_wait`**. That call
-   blocks until you finish; it is how the agent waits for your unified answer.
+3. When it has finished proposing, the agent starts a **review waiter
+   subagent**. The waiter calls `review_wait` with the `reviewId` and `waitKey`
+   from the tool result and waits. The main agent can keep chatting or end the
+   turn; when the review finishes, the waiter returns and wakes it. If
+   delegation is unavailable, **`review_wait`** blocks the main agent as before.
 4. You **Approve**, **Reject** (with instructions), or **Edit** each file, then
    **Finish**. Approved and hand-edited files are written; rejected files are
    not. `review_wait` returns one structured result per file
@@ -71,6 +74,9 @@ tab, and nothing touches disk until you finish.
    to use these tools, and native `write` / `edit` / `apply_patch` are refused
    by the plugin's tool gate. Turning the switch off returns it to native
    editing. Shell commands (`bash`, `sed`, …) are outside the review.
+
+Both tools return `reviewId` and `waitKey`; use them to start a review waiter
+subagent instead of blocking the current turn.
 
 Both tools accept an optional `notes` array. Each note is anchored to a
 new-file `line` (recommended) or a 1-based `hunk`; the review diff renders it as

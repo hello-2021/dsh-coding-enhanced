@@ -1,6 +1,6 @@
 {
   "name": "dsh-coding-enhanced",
-  "version": "0.5.22",
+  "version": "0.6.0",
   "description": "DSH bundle: AI change review with a right-sidebar diff gate, and multi-turn workspace withdraw.",
   "type": "module",
   "main": "lib/index.js",
