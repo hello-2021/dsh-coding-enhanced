@@ -2,9 +2,9 @@
 
 # dsh-coding-enhanced
 
-**Improve your coding experience with a stronger sense of control in [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness).**
+**The DSH change gate: review before it lands, rewind when it goes wrong, and keep working while review waits.**
 
-Review every AI file change before it lands · Undo the last turn when it goes wrong
+Queue every AI edit · rewind whole turns · hand review to a non-blocking waiter
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![DSH](https://img.shields.io/badge/DSH-0.2.x-4d6bfe)
@@ -15,14 +15,23 @@ Review every AI file change before it lands · Undo the last turn when it goes w
 
 ---
 
-**`dsh-coding-enhanced` is a growing bundle of coding-workflow enhancements for DSH**, shipped as one installable plugin. It contains **two independent sub-features today**, and new sub-features are added over time.
+`dsh-coding-enhanced` is **not another AI PR reviewer**. It is a **workflow layer for DSH agents**, shipped as one installable plugin:
 
-| | Sub-feature | What it gives you |
+- **Pre-write change gate** — native `write` / `edit` / `apply_patch` are refused while Auto review is on; the agent queues `review_write` / `review_patch`; nothing lands until you Finish.
+- **Workspace time machine** — per-turn shadow-git snapshots, multi-turn withdraw, a pre-withdraw backup, and a gap warning when a rewind crosses turns without snapshots.
+- **Non-blocking review handoff** — one persistent review waiter subagent holds the wait; the main agent can keep chatting or end the turn; the waiter wakes it with the per-file results.
+- **Remote + cross-AI (next)** — passkey-paired always-on web review, line-level AI comments (B), and an adversarial AI cross-review API.
+
+> **What this is not.** Not an AI PR reviewer (CodeRabbit / Qodo / Copilot), not a hosted SaaS, and not a claim to be first. The diff UI is table stakes; the gate, the time machine, and the handoff are the product. See the [prior-art survey](docs/prior-art.md) for the direct comparison with [`dsh-diff-approval`](https://github.com/9087/dsh-diff-approval).
+
+| | Pillar | What it gives you |
 |---|---|---|
-| 🛡️ | **AI Change Review** | The agent queues every change with `review_write` / `review_patch`; they accumulate in one right-sidebar tab, and `review_wait` blocks until you approve, reject with instructions, or edit them yourself. |
-| ↩️ | **Turn Withdraw** | Restore the workspace to before the latest turn and cancel that round in the model's context. |
+| 🛡️ | **Change gate** (the `AI Change Review` switch) | The agent queues every edit with `review_write` / `review_patch`; they accumulate in one review tab; nothing lands until you approve, reject, edit or Finish. |
+| ↩️ | **Workspace time machine** (the `Turn Withdraw` switch) | Restore the workspace to before a turn and cancel that round in the model's context; multi-turn rewind, backup and gap warnings. |
+| ⏳ | **Review handoff** | One persistent review waiter subagent holds the wait; the main agent keeps working and is woken when you Finish. |
+| 🌐 | **Remote + cross-AI** | Planned: passkey-paired web review, line-level AI comments, adversarial external-AI cross-review. |
 
-Both live in one bundle and work independently — install once, use either.
+All in one bundle — install once, use the gate and the time machine independently.
 
 ---
 
@@ -30,7 +39,7 @@ Both live in one bundle and work independently — install once, use either.
 
 ## 🧩 Sub-features
 
-### 🛡️ 1. AI Change Review
+### 🛡️ 1. Change gate (`AI Change Review`)
 
 DSH agents normally write files as they go. With this sub-feature, changes are
 **queued** instead: the agent proposes every edit, they accumulate in one review
@@ -145,7 +154,7 @@ always shows the cumulative change.
   Deletes, renames, copies, binary patches and paths outside the working
   directory are refused — use `review_write` for those cases.
 
-### ↩️ 2. Turn Withdraw
+### ↩️ 2. Workspace time machine (`Turn Withdraw`)
 
 The last turn wrote something you did not want? Undo it in one click.
 
@@ -185,6 +194,19 @@ The last turn wrote something you did not want? Undo it in one click.
 ---
 
 <a id="quick-start"></a>
+
+### ⏳ 3. Non-blocking review handoff
+
+The main agent does not call `review_wait` itself. After queueing, it starts **one
+persistent review waiter subagent** per conversation and sends it the
+`reviewId` + `waitKey`; later reviews reuse the same child with
+`send_message` instead of spawning a new subagent.
+
+- the waiter calls `review_wait` with both and blocks only itself;
+- the main agent can keep chatting, do other work, or end the turn;
+- when you Finish, the waiter returns the per-file results and wakes the main agent;
+- if the waiter is gone, the main agent starts a new one; direct `review_wait`
+  remains as the fallback.
 
 ## 🚀 Quick start
 
@@ -242,8 +264,8 @@ Open **Settings → Coding Enhanced** (the same controls appear on the plugin's 
 
 | Setting | Default | What it does |
 |---|---|---|
-| **AI Change Review** | on | the queued review gate for `review_write` / `review_patch` |
-| **Turn Withdraw** | on | turn-start snapshots and the withdraw action |
+| **Change gate** (`AI Change Review`) | on | the pre-write review gate for `review_write` / `review_patch` |
+| **Workspace time machine** (`Turn Withdraw`) | on | turn-start snapshots, multi-turn withdraw and the restore action |
 | **Turns kept for withdraw** | 10 | how many recent turns stay withdrawable (1–50) |
 | **Snapshot nested git repositories** | on | include nested repositories' working files (excluding `.git`) |
 | **Automatic cleanup** | on | run `git gc` on shadow snapshots after pruning or withdrawing |
@@ -265,12 +287,12 @@ This is a convenience switch, separate from **Settings → Coding Enhanced → A
 Change Review** (which enables the review tab and withdraw surfaces). More
 review switches will be added to the same popover.
 
-### 4. Use the review gate
+### 4. Use the change gate
 
 Ask the agent to change files → it queues them with `review_write` / `review_patch` → the **Code review** tab opens → decide per file
 → **Finish**.
 
-### 5. Use withdraw
+### 5. Use the time machine
 
 Click the undo icon in the assistant action row on the latest completed turn →
 confirm. Before the files are restored, the plugin snapshots the current
@@ -370,20 +392,21 @@ tools/pre-execute ── waits for your decision
 
 ## 🗺️ Roadmap
 
-The bundle is intentionally a home for **more coding-workflow sub-features**.
-Planned directions (not commitments):
+The gate, the time machine, and the handoff are the product. The local diff UI
+is deliberately simple; [`dsh-diff-approval`](https://github.com/9087/dsh-diff-approval)
+already covers the “beautiful diff panel” case. Next:
 
-- review coverage for `apply_patch` and shell edits;
-- side-by-side diff mode and per-file folding;
-- review history per session (reopen a finished review);
-- per-project review policy (auto-approve patterns);
-- redo for withdrawn turns.
+- **P1 — standalone web review**: passkey pairing, always-on standby, outbound
+  WSS bridge, review display and decisions.
+- **P2 — line-level AI comments (B)**: a dedicated comment subagent; line
+  selection; suggestions.
+- **P3 — multi-round AI revisions**: previous-round dimming; a previous-round
+  addition removed this round stays red.
+- **P4 — external AI adversarial cross-review**: review-scoped tokens,
+  participants, verdicts, proposals.
 
-Have an idea? Open an issue.
-
----
-
-<a id="development"></a>
+See [the architecture](docs/web-review-architecture.md) and [the prior-art
+survey](docs/prior-art.md).
 
 ## 🛠️ Development
 

@@ -6,6 +6,17 @@
 
 ---
 
+## Positioning
+
+这不是“又一个 AI PR review / diff viewer”。它是 **DSH 的变更工作流层**：
+
+- **Pre-write change gate**：写入前拦 native tools，统一进 review；
+- **Workspace time machine**：按 turn 的 shadow-git 快照，多轮回退；
+- **Non-blocking review handoff**：持久 waiter 子 agent 等待，主 agent 继续/结束；
+- **Remote + cross-AI**：passkey Web、行级 AI（B）、对抗式 cross-review API。
+
+本地 diff UI 是 table stakes；`dsh-diff-approval` 已是更强的“写后 review + per-block keep/revert”面板。Web 端必须做**远程/常驻 gate + 行级 AI + 多轮 + cross-AI**，而不是再做一个 diff 面板。详见 [`prior-art.md`](prior-art.md)。
+
 ## 0. 结论
 
 采用 **hub-and-spoke**：
