@@ -194,3 +194,36 @@ code { font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace; fon
   .content { padding: 14px; }
   .hero { flex-direction: column; align-items: flex-start; }
 }
+
+.review-files { display: grid; gap: 14px; }
+.review-file { border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); overflow: hidden; }
+.review-file-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; background: #f6f8fa; border-bottom: 1px solid var(--border-soft); flex-wrap: wrap; }
+.review-file-path { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.review-file-path strong { font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace; font-size: 12px; overflow-wrap: anywhere; }
+.review-file-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.review-file .diff { max-height: 56vh; }
+.review-file .empty { padding: 20px; }
+
+.modal-backdrop { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 18px; background: rgba(31,35,40,.35); }
+.modal { width: min(920px, 100%); max-height: 90vh; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); box-shadow: 0 24px 60px rgba(31,35,40,.18); overflow: hidden; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border-soft); flex-wrap: wrap; }
+.modal-head strong { font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace; font-size: 12px; overflow-wrap: anywhere; }
+.modal-tabs { display: flex; gap: 4px; }
+.modal-body { min-height: 0; flex: 1; overflow: auto; }
+.full-file { margin: 0; padding: 14px; white-space: pre; tab-size: 2; font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace; font-size: 12px; line-height: 1.55; }
+.full-file-edit { width: 100%; min-height: 52vh; padding: 14px; border: 0; outline: 0; resize: vertical; tab-size: 2; font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace; font-size: 12px; line-height: 1.55; background: #fff; color: var(--text); }
+.modal-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--border-soft); flex-wrap: wrap; }
+.modal-buttons { display: flex; gap: 8px; }
+
+@media (max-width: 720px) {
+  .review-file-head { align-items: flex-start; flex-direction: column; }
+  .modal { max-height: 94vh; }
+  .full-file-edit { min-height: 46vh; }
+}
+
+.comment-row { padding: 0 12px 10px; }
+.comment-box { width: 100%; min-height: 38px; padding: 7px 9px; border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 12px; resize: vertical; background: #fff; color: var(--text); }
+.comment-box:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(9,105,218,.14); }
+.stale-note { padding: 8px 12px; border-bottom: 1px solid rgba(154,103,0,.25); background: #fff8e6; color: var(--yellow); font-size: 12px; }
+.finish-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.modal-stale { padding: 8px 14px; border-bottom: 1px solid rgba(154,103,0,.25); background: #fff8e6; color: var(--yellow); font-size: 12px; }

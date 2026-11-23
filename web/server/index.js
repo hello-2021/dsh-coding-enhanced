@@ -1,19 +1,18 @@
 /**
- * dsh-coding-enhanced-web — standalone review server (W1a skeleton).
+ * dsh-coding-enhanced-web — standalone review server.
  *
  * Scope of this file:
- *   - SQLite schema (node:sqlite) for users, passkeys, sessions, devices,
+ *   - SQLite schema (node:sqlite) for users, user keys, sessions, devices,
  *     pairing codes, review snapshots and audit;
- *   - username + passkey registration/login (WebAuthn, @simplewebauthn/server);
+ *   - username + user key registration/login (key-auth.js);
  *   - one-time pairing code -> device token;
  *   - /ws/device: plugin outbound WSS, receives review.snapshot/update/result;
- *   - /ws/browser: passkey session cookie, receives snapshots and sends
+ *   - /ws/browser: session cookie, receives snapshots and sends
  *     decision / line.request to the paired device;
  *   - REST for health, auth, devices, pairing, review list/detail.
  *
  * Run: node server/index.js --port 4317 --host 127.0.0.1 --data ~/.dsh-coding-enhanced-web
- * Passkeys require a secure context: open http://localhost:4317 (not 127.0.0.1
- * in browsers that reject IP RP IDs). Default rp-id is localhost.
+ * Dev: start with ORIGIN=http://localhost:5173 for the Vite UI.
  */
 
 import Fastify from 'fastify'
@@ -26,12 +25,6 @@ import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import {
-  generateAuthenticationOptions,
-  generateRegistrationOptions,
-  verifyAuthenticationResponse,
-  verifyRegistrationResponse,
-} from '@simplewebauthn/server'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const publicDir = join(here, '..', 'public')
@@ -44,9 +37,7 @@ const arg = (name, fallback) => {
 const port = Number(arg('port', process.env.PORT ?? 4317))
 const host = arg('host', process.env.HOST ?? '127.0.0.1')
 const dataDir = resolve(arg('data', process.env.DATA_DIR ?? join(homedir(), '.dsh-coding-enhanced-web')))
-const rpID = arg('rp-id', process.env.RP_ID ?? 'localhost')
 const origin = arg('origin', process.env.ORIGIN ?? `http://localhost:${port}`)
-const rpName = arg('rp-name', process.env.RP_NAME ?? 'DSH Coding Enhanced')
 const secureCookie = origin.startsWith('https://')
 
 mkdirSync(dataDir, { recursive: true })
@@ -58,16 +49,6 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   username TEXT NOT NULL UNIQUE,
-  created_at INTEGER NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS passkeys (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL,
-  credential_id TEXT NOT NULL UNIQUE,
-  public_key TEXT NOT NULL,
-  counter INTEGER NOT NULL,
-  transports TEXT NOT NULL,
   created_at INTEGER NOT NULL
 );
 
@@ -116,7 +97,6 @@ CREATE TABLE IF NOT EXISTS audit (
   detail TEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_passkeys_user ON passkeys(user_id);
 CREATE INDEX IF NOT EXISTS idx_devices_user ON devices(user_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_device ON reviews(device_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_updated ON reviews(updated_at);
@@ -128,9 +108,6 @@ db.prepare('DELETE FROM pairing_codes WHERE expires_at < ?').run(Date.now())
 const now = () => Date.now()
 const newId = (prefix) => `${prefix}-${randomBytes(12).toString('base64url')}`
 const sha256 = (value) => createHash('sha256').update(value).digest('hex')
-const toB64 = (value) => Buffer.from(value).toString('base64url')
-const fromB64 = (value) => Buffer.from(value, 'base64url')
-const toJson = (value) => JSON.stringify(value)
 const fromJson = (value, fallback) => {
   try {
     return JSON.parse(value)
@@ -141,7 +118,6 @@ const fromJson = (value, fallback) => {
 
 const sessionCookie = 'ce_session'
 const sessionTtl = 30 * 24 * 60 * 60 * 1000
-const challengeTtl = 5 * 60 * 1000
 const pairingTtl = 10 * 60 * 1000
 const codeAlphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 
@@ -166,15 +142,6 @@ const rateLimit = (key, max, windowMs = 60_000) => {
   list.push(time)
   hits.set(key, list)
   return true
-}
-
-const challenges = new Map()
-const setChallenge = (key, value) => challenges.set(key, { ...value, expiresAt: now() + challengeTtl })
-const takeChallenge = (key) => {
-  const value = challenges.get(key)
-  challenges.delete(key)
-  if (!value || value.expiresAt < now()) return undefined
-  return value
 }
 
 const deviceSockets = new Map()
@@ -277,140 +244,10 @@ app.get('/api/health', async () => ({
   ok: true,
   name: 'dsh-coding-enhanced-web',
   version: '0.1.0',
-  rpID,
   origin,
   onlineDevices: deviceSockets.size,
   uptime: Math.round(process.uptime()),
 }))
-
-app.post('/api/auth/passkey/register/options', async (request, reply) => {
-  if (!rateLimit(`register:${request.ip}`, 20)) return fail(reply, 429, 'too many requests')
-  const body = request.body ?? {}
-  const username = String(body.username ?? '').trim()
-  if (!/^[A-Za-z0-9_.-]{3,32}$/.test(username)) return fail(reply, 400, 'username must be 3-32 characters (letters, numbers, _ . -)')
-  if (db.prepare('SELECT 1 AS found FROM users WHERE username = ?').get(username)) return fail(reply, 409, 'username already exists')
-
-  const userId = newId('user')
-  let options
-  try {
-    options = await generateRegistrationOptions({
-      rpName,
-      rpID,
-      userID: new TextEncoder().encode(userId),
-      userName: username,
-      userDisplayName: username,
-      attestationType: 'none',
-      excludeCredentials: [],
-      authenticatorSelection: { residentKey: 'preferred', userVerification: 'preferred' },
-    })
-  } catch (error) {
-    return fail(reply, 500, `cannot create registration options: ${String(error)}`)
-  }
-  setChallenge(`register:${username}`, { challenge: options.challenge, userId })
-  return options
-})
-
-app.post('/api/auth/passkey/register/verify', async (request, reply) => {
-  const body = request.body ?? {}
-  const username = String(body.username ?? '').trim()
-  const response = body.response
-  if (username === '' || !response) return fail(reply, 400, 'username and response are required')
-  const challenge = takeChallenge(`register:${username}`)
-  if (!challenge) return fail(reply, 400, 'registration challenge expired')
-  if (db.prepare('SELECT 1 AS found FROM users WHERE username = ?').get(username)) return fail(reply, 409, 'username already exists')
-
-  let verification
-  try {
-    verification = await verifyRegistrationResponse({
-      response,
-      expectedChallenge: challenge.challenge,
-      expectedOrigin: origin,
-      expectedRPID: rpID,
-      requireUserVerification: true,
-    })
-  } catch (error) {
-    return fail(reply, 400, `registration verification failed: ${String(error)}`)
-  }
-  if (!verification.verified || !verification.registrationInfo) return fail(reply, 400, 'registration was not verified')
-
-  const credential = verification.registrationInfo.credential
-  const userId = challenge.userId
-  db.exec('BEGIN')
-  try {
-    db.prepare('INSERT INTO users (id, username, created_at) VALUES (?, ?, ?)').run(userId, username, now())
-    db.prepare('INSERT INTO passkeys (id, user_id, credential_id, public_key, counter, transports, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(newId('pk'), userId, credential.id, toB64(credential.publicKey), credential.counter, toJson(credential.transports ?? []), now())
-    db.exec('COMMIT')
-  } catch (error) {
-    db.exec('ROLLBACK')
-    return fail(reply, 409, `cannot create user: ${String(error)}`)
-  }
-
-  const token = createSession(userId)
-  setSessionCookie(reply, token)
-  audit(userId, 'register', username)
-  return { user: { id: userId, username } }
-})
-
-app.post('/api/auth/passkey/login/options', async (request, reply) => {
-  if (!rateLimit(`login:${request.ip}`, 30)) return fail(reply, 429, 'too many requests')
-  const username = String((request.body ?? {}).username ?? '').trim()
-  const user = db.prepare('SELECT id, username FROM users WHERE username = ?').get(username)
-  if (!user) return fail(reply, 404, 'user not found')
-  const passkeys = db.prepare('SELECT * FROM passkeys WHERE user_id = ?').all(user.id)
-  if (passkeys.length === 0) return fail(reply, 400, 'no passkey registered')
-
-  let options
-  try {
-    options = await generateAuthenticationOptions({
-      rpID,
-      allowCredentials: passkeys.map((passkey) => ({ id: passkey.credential_id, transports: fromJson(passkey.transports, []) })),
-      userVerification: 'preferred',
-    })
-  } catch (error) {
-    return fail(reply, 500, `cannot create login options: ${String(error)}`)
-  }
-  setChallenge(`login:${username}`, { challenge: options.challenge, userId: user.id })
-  return options
-})
-
-app.post('/api/auth/passkey/login/verify', async (request, reply) => {
-  const body = request.body ?? {}
-  const username = String(body.username ?? '').trim()
-  const response = body.response
-  if (username === '' || !response) return fail(reply, 400, 'username and response are required')
-  const challenge = takeChallenge(`login:${username}`)
-  if (!challenge) return fail(reply, 400, 'login challenge expired')
-  const passkey = db.prepare('SELECT * FROM passkeys WHERE user_id = ? AND credential_id = ?').get(challenge.userId, response.id)
-  if (!passkey) return fail(reply, 400, 'passkey not found')
-
-  let verification
-  try {
-    verification = await verifyAuthenticationResponse({
-      response,
-      expectedChallenge: challenge.challenge,
-      expectedOrigin: origin,
-      expectedRPID: rpID,
-      credential: {
-        id: passkey.credential_id,
-        publicKey: fromB64(passkey.public_key),
-        counter: passkey.counter,
-        transports: fromJson(passkey.transports, []),
-      },
-      requireUserVerification: true,
-    })
-  } catch (error) {
-    return fail(reply, 401, `login verification failed: ${String(error)}`)
-  }
-  if (!verification.verified) return fail(reply, 401, 'login was not verified')
-
-  db.prepare('UPDATE passkeys SET counter = ? WHERE id = ?').run(verification.authenticationInfo.newCounter, passkey.id)
-  const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(passkey.user_id)
-  if (!user) return fail(reply, 401, 'user not found')
-  const token = createSession(user.id)
-  setSessionCookie(reply, token)
-  audit(user.id, 'login', username)
-  return { user }
-})
 
 app.get('/api/auth/me', async (request, reply) => {
   const user = userFromRequest(request)
