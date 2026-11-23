@@ -20,7 +20,7 @@ Queue every AI edit · rewind whole turns · hand review to a non-blocking waite
 - **Pre-write change gate** — native `write` / `edit` / `apply_patch` are refused while Pre-review is on; the agent queues `review_write` / `review_patch`; nothing lands until you Finish.
 - **Workspace time machine** — per-turn shadow-git snapshots, multi-turn withdraw, a pre-withdraw backup, and a gap warning when a rewind crosses turns without snapshots.
 - **Non-blocking review handoff** — one persistent review waiter subagent holds the wait; the main agent can keep chatting or end the turn; the waiter wakes it with the per-file results.
-- **Remote + cross-AI (next)** — passkey-paired always-on web review, line-level AI comments (B), and an adversarial AI cross-review API.
+- **Remote + cross-AI (next)** — username+key web review, line-level AI comments (B), and an adversarial AI cross-review API.
 
 > **What this is not.** Not an AI PR reviewer (CodeRabbit / Qodo / Copilot), not a hosted SaaS, and not a claim to be first. The diff UI is table stakes; the gate, the time machine, and the handoff are the product. See the [prior-art survey](docs/prior-art.md) for the direct comparison with [`dsh-diff-approval`](https://github.com/9087/dsh-diff-approval).
 
@@ -29,7 +29,7 @@ Queue every AI edit · rewind whole turns · hand review to a non-blocking waite
 | 🛡️ | **Change gate** (the `AI Change Review` switch) | The agent queues every edit with `review_write` / `review_patch`; they accumulate in one review tab; nothing lands until you approve, reject, edit or Finish. |
 | ↩️ | **Workspace time machine** (the `Turn Withdraw` switch) | Restore the workspace to before a turn and cancel that round in the model's context; multi-turn rewind, backup and gap warnings. |
 | ⏳ | **Review handoff** | One persistent review waiter subagent holds the wait; the main agent keeps working and is woken when you Finish. |
-| 🌐 | **Remote + cross-AI** | Planned: passkey-paired web review, line-level AI comments, adversarial external-AI cross-review. |
+| 🌐 | **Remote + cross-AI** | Planned: username+key web review, line-level AI comments, adversarial external-AI cross-review. |
 
 All in one bundle — install once, use the gate and the time machine independently.
 
@@ -290,6 +290,11 @@ This is a convenience switch, separate from **Settings → Coding Enhanced → A
 Change Review** (which enables the review tab and withdraw surfaces). More
 review switches will be added to the same popover.
 
+A separate **Web / Both / DSH** switch sits next to the shield and selects where
+reviews are decided. **Web** uses only the standalone review server; **DSH**
+uses only the sidebar review tab and keeps the outbound WSS stopped; **Both**
+mirrors to both. Switching the channel is immediate and survives a restart.
+
 ### 4. Use the change gate
 
 Ask the agent to change files → it queues them with `review_write` / `review_patch` → the **Code review** tab opens → decide per file
@@ -399,7 +404,7 @@ The gate, the time machine, and the handoff are the product. The local diff UI
 is deliberately simple; [`dsh-diff-approval`](https://github.com/9087/dsh-diff-approval)
 already covers the “beautiful diff panel” case. Next:
 
-- **P1 — standalone web review**: passkey pairing, always-on standby, outbound
+- **P1 — standalone web review**: username+key pairing, always-on standby, outbound
   WSS bridge, review display and decisions.
 - **P2 — line-level AI comments (B)**: a dedicated comment subagent; line
   selection; suggestions.

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.2
+
+- Three-way **Review channel** switch in the Review tools popover: **Web** (standalone
+  review server only), **Both** (default), or **DSH** (sidebar tab only).
+- Host `reviewChannel` setting: `builtin` keeps the outbound WSS stopped and
+  skips snapshot publishing; switching modes starts or stops the bridge live.
+- Client gates the review tab type and the `sidebar.right.pane.tab` body:
+  Web mode removes the DSH tab and closes open review tabs; DSH/Both register
+  them again without a reload.
+- Web review UI: AI explanation rows anchored to their code lines, soft-wrapped
+  diffs with page scrolling, an auto-growing AI message box, a collapsible
+  app sidebar, a topbar back button, and light-theme syntax highlighting.
+
 ## 0.9.1
 
 - Web review decisions: per-file Approve/Reject and Finish in the browser;

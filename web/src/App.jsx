@@ -8,6 +8,8 @@ const NAV_ITEMS = [
   { id: 'devices', label: 'Devices' },
 ]
 
+const SIDEBAR_KEY = 'dsh-review.sidebar-collapsed'
+
 function timeAgo(value) {
   if (!value) return '—'
   const seconds = Math.max(0, Math.round((Date.now() - Number(value)) / 1000))
@@ -17,10 +19,6 @@ function timeAgo(value) {
   const hours = Math.round(minutes / 60)
   if (hours < 24) return `${hours}h ago`
   return `${Math.round(hours / 24)}d ago`
-}
-
-function shortId(value) {
-  return String(value ?? '').slice(0, 18)
 }
 
 function reviewTitle(review) {
@@ -146,11 +144,25 @@ function AuthScreen({ onUser }) {
   )
 }
 
-function Shell({ user, view, onNavigate, socketState, devices, onLogout, children }) {
+function Shell({ user, view, onNavigate, onBack, socketState, devices, onLogout, children }) {
   const online = devices.filter((device) => device.online).length
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return window.localStorage.getItem(SIDEBAR_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0')
+    } catch {
+      // Keep the toggle usable for this page even when storage is unavailable.
+    }
+  }, [collapsed])
   return (
-    <div className="app">
-      <aside className="sidebar">
+    <div className={`app${collapsed ? ' sidebar-collapsed' : ''}`}>
+      <aside className="sidebar" id="app-sidebar">
         <div className="sidebar-brand">
           <span className="brand-dot" />
           <span>DSH Review</span>
@@ -183,7 +195,37 @@ function Shell({ user, view, onNavigate, socketState, devices, onLogout, childre
       </aside>
       <main className="main">
         <header className="topbar">
-          <div className="topbar-title">{view === 'review' ? 'Review' : NAV_ITEMS.find((item) => item.id === view)?.label ?? 'Standby'}</div>
+          <div className="topbar-left">
+            <button
+              type="button"
+              className="sidebar-toggle"
+              aria-expanded={!collapsed}
+              aria-controls="app-sidebar"
+              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              onClick={() => setCollapsed((value) => !value)}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="1.8" y="2.5" width="12.4" height="11" rx="2" />
+                <path d="M6.2 2.5v11" />
+              </svg>
+            </button>
+            {view !== 'standby' ? (
+              <button
+                type="button"
+                className="sidebar-toggle topbar-back"
+                title={view === 'review' ? 'Back to Reviews' : 'Back to Standby'}
+                aria-label={view === 'review' ? 'Back to Reviews' : 'Back to Standby'}
+                onClick={onBack}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9.5 3.5 5 8l4.5 4.5" />
+                  <path d="M5 8h8" />
+                </svg>
+              </button>
+            ) : null}
+            <div className="topbar-title">{view === 'review' ? 'Review' : NAV_ITEMS.find((item) => item.id === view)?.label ?? 'Standby'}</div>
+          </div>
           <div className={`conn ${socketState}`}>
             <span className="dot" />
             {socketState === 'online' ? 'Live' : socketState === 'connecting' ? 'Connecting…' : 'Reconnecting…'}
@@ -377,149 +419,6 @@ function Reviews({ reviews, onOpen }) {
   )
 }
 
-function NoteBar({ notes }) {
-  if (!Array.isArray(notes) || notes.length === 0) return null
-  return (
-    <div className="notes">
-      {notes.map((note, index) => (
-        <div className="note" key={`${note.line ?? note.hunk ?? 'note'}-${index}`}>
-          <span className="ai">AI</span>
-          <span className="note-text">{note.text}</span>
-          {note.line ? <span className="note-anchor">line {note.line}</span> : note.hunk ? <span className="note-anchor">hunk {note.hunk}</span> : null}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function DiffView({ entry }) {
-  if (!entry) return null
-  const hunks = Array.isArray(entry.hunks) ? entry.hunks : []
-  if (hunks.length === 0) {
-    return (
-      <div className="empty">
-        <strong>No text hunks</strong>
-        <span>The file may be binary, too large, or unchanged in this round.</span>
-      </div>
-    )
-  }
-  return (
-    <div className="diff">
-      {hunks.map((hunk, hunkIndex) => (
-        <div className="hunk" key={hunkIndex}>
-          <div className="hunk-head">{hunk.header ?? `@@ hunk ${hunkIndex + 1} @@`}</div>
-          {(hunk.lines ?? []).map((line, lineIndex) => (
-            <div className={`line ${line.type}`} key={lineIndex}>
-              <span className="no">{line.oldNo ?? ''}</span>
-              <span className="no">{line.newNo ?? ''}</span>
-              <span className="sign">{line.type === 'add' ? '+' : line.type === 'del' ? '−' : ' '}</span>
-              <span className="text">{line.text}</span>
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function ReviewDetail({ review, onBack }) {
-  const entries = Array.isArray(review?.entries) ? review.entries : []
-  const [activeIndex, setActiveIndex] = useState(0)
-
-  useEffect(() => {
-    setActiveIndex(0)
-  }, [review?.id])
-
-  if (!review) {
-    return (
-      <div className="stack">
-        <button type="button" className="link-button" onClick={onBack}>
-          ← Reviews
-        </button>
-        <Empty title="Review not loaded" hint="Open it again from the Reviews list." />
-      </div>
-    )
-  }
-
-  const index = Math.min(activeIndex, Math.max(0, entries.length - 1))
-  const entry = entries[index]
-  const status = statusOf(review)
-
-  return (
-    <div className="review-page">
-      <div className="review-head">
-        <button type="button" className="link-button" onClick={onBack}>
-          ← Reviews
-        </button>
-        <div className="review-title">
-          <h2>{reviewTitle(review)}</h2>
-          <span className={`pill ${status}`}>{status}</span>
-        </div>
-        <div className="muted">
-          session {shortId(review.sessionId)} · {entries.length} file{entries.length === 1 ? '' : 's'} · v{review.version ?? 0}
-        </div>
-      </div>
-
-      {entries.length === 0 ? (
-        <Empty title="No files in this review" hint="The snapshot has no entries yet." />
-      ) : (
-        <div className="review-layout">
-          <aside className="file-rail">
-            {entries.map((item, itemIndex) => (
-              <button
-                key={item.id ?? item.path ?? itemIndex}
-                type="button"
-                className={itemIndex === index ? 'file-item active' : 'file-item'}
-                onClick={() => setActiveIndex(itemIndex)}
-              >
-                <span className="file-path">{item.display ?? item.path}</span>
-                <span className="file-stat">
-                  <span className="add">+{item.added ?? 0}</span>
-                  <span className="del">−{item.removed ?? 0}</span>
-                </span>
-                {item.warning ? <span className="file-warning">!</span> : null}
-              </button>
-            ))}
-          </aside>
-          <section className="diff-pane">
-            {entry ? (
-              <>
-                <div className="diff-head">
-                  <div>
-                    <strong>{entry.display ?? entry.path}</strong>
-                    <span className="muted">
-                      {entry.isNew ? 'new file' : 'modified'}
-                      {entry.truncated ? ' · truncated' : ''}
-                    </span>
-                  </div>
-                  <div className="diff-actions">
-                    <button type="button" className="button small" disabled title="Decision apply arrives with the plugin bridge (W2/W3)">
-                      Approve
-                    </button>
-                    <button type="button" className="button small" disabled title="Decision apply arrives with the plugin bridge (W2/W3)">
-                      Reject
-                    </button>
-                  </div>
-                </div>
-                {entry.warning ? <div className="warning">{entry.warning}</div> : null}
-                <NoteBar notes={entry.notes} />
-                <DiffView entry={entry} />
-              </>
-            ) : null}
-          </section>
-        </div>
-      )}
-
-      <div className="finish-bar">
-        <span className="muted">Review decisions and Finish will be enabled with the plugin bridge (W2/W3).</span>
-        <button type="button" className="button primary" disabled>
-          Finish review
-        </button>
-      </div>
-    </div>
-  )
-}
-
 export default function App() {
   const [user, setUser] = useState(null)
   const [booting, setBooting] = useState(true)
@@ -650,6 +549,15 @@ export default function App() {
     if (next !== 'review') setReview(null)
   }
 
+  const goBack = () => {
+    if (view === 'review') {
+      setView('reviews')
+    } else {
+      setView('standby')
+    }
+    setReview(null)
+  }
+
   const createPairing = async () => {
     try {
       const data = await api('/api/devices/pairing-code', { method: 'POST' })
@@ -689,7 +597,7 @@ export default function App() {
   if (!user) return <AuthScreen onUser={onUser} />
 
   return (
-    <Shell user={user} view={view} onNavigate={onNavigate} socketState={socketState} devices={devices} onLogout={onLogout}>
+    <Shell user={user} view={view} onNavigate={onNavigate} onBack={goBack} socketState={socketState} devices={devices} onLogout={onLogout}>
       {view === 'standby' ? (
         <Standby
           devices={devices}

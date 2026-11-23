@@ -28,10 +28,10 @@
     <div class="card">
       <div class="row"><span>Status</span><strong id="status">checking…</strong></div>
       <div class="row"><span>Version</span><strong id="version">—</strong></div>
-      <div class="row"><span>RP ID / origin</span><strong id="rp">—</strong></div>
+      <div class="row"><span>Origin</span><strong id="rp">—</strong></div>
       <div class="row"><span>Online devices</span><strong id="devices">—</strong></div>
     </div>
-    <p class="hint">The React review UI (passkey login, pairing, diff, decisions) lands in W1b. This page only verifies that the server, SQLite and passkey config are alive.</p>
+    <p class="hint">The React review UI serves the same origin. This page only verifies that the server, SQLite and username+key auth are alive.</p>
   </main>
   <script>
     const el = (id) => document.getElementById(id)
@@ -41,7 +41,7 @@
         el('status').textContent = data.ok ? 'ok' : 'error'
         el('status').className = data.ok ? 'ok' : ''
         el('version').textContent = data.version ?? '—'
-        el('rp').textContent = `${data.rpID ?? '—'} · ${data.origin ?? '—'}`
+        el('rp').textContent = data.origin ?? '—'
         el('devices').textContent = String(data.onlineDevices ?? 0)
       })
       .catch(() => {

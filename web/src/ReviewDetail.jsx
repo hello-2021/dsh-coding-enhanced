@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { highlightLine, languageOf } from './highlight.js'
 
 function shortId(value) {
   return String(value ?? '').slice(0, 18)
@@ -25,24 +26,65 @@ function Empty({ title, hint }) {
   )
 }
 
-function NoteBar({ notes }) {
-  if (!Array.isArray(notes) || notes.length === 0) return null
+function InlineNote({ note }) {
   return (
-    <div className="notes">
-      {notes.map((note, index) => (
-        <div className="note" key={`${note.line ?? note.hunk ?? 'note'}-${index}`}>
-          <span className="ai">AI</span>
-          <span className="note-text">{note.text}</span>
-          {note.line ? <span className="note-anchor">line {note.line}</span> : note.hunk ? <span className="note-anchor">hunk {note.hunk}</span> : null}
-        </div>
-      ))}
+    <div className="note-inline">
+      <span className="ai">AI</span>
+      <span className="note-text">{note.text}</span>
     </div>
+  )
+}
+
+function notesByAnchor(notes) {
+  const byLine = new Map()
+  const byHunk = new Map()
+  for (const note of Array.isArray(notes) ? notes : []) {
+    if (note === null || typeof note !== 'object' || typeof note.text !== 'string' || note.text.trim() === '') continue
+    if (Number.isInteger(note.line)) {
+      if (!byLine.has(note.line)) byLine.set(note.line, [])
+      byLine.get(note.line).push(note)
+    } else if (Number.isInteger(note.hunk)) {
+      if (!byHunk.has(note.hunk)) byHunk.set(note.hunk, [])
+      byHunk.get(note.hunk).push(note)
+    }
+  }
+  return { byLine, byHunk }
+}
+
+function CommentBox({ id, value, disabled, onChange }) {
+  const ref = useRef(null)
+  useLayoutEffect(() => {
+    const node = ref.current
+    if (!node) return
+    node.style.height = 'auto'
+    node.style.height = `${node.scrollHeight}px`
+  }, [value])
+  return (
+    <textarea
+      ref={ref}
+      id={id}
+      className="comment-box"
+      placeholder="Message to the AI (optional; sent with this decision)"
+      value={value}
+      disabled={disabled}
+      onChange={onChange}
+    />
+  )
+}
+
+function CodeText({ text, language }) {
+  return highlightLine(text, language).map((token, index) =>
+    token.cls === undefined
+      ? token.text
+      : <span key={index} className={`tok tok-${token.cls}`}>{token.text}</span>,
   )
 }
 
 function DiffView({ entry }) {
   if (!entry) return null
   const hunks = Array.isArray(entry.hunks) ? entry.hunks : []
+  const language = languageOf(entry.display ?? entry.path)
+  const { byLine, byHunk } = notesByAnchor(entry.notes)
   if (hunks.length === 0) {
     return (
       <div className="empty">
@@ -51,21 +93,36 @@ function DiffView({ entry }) {
       </div>
     )
   }
+  const seenLines = new Set()
   return (
     <div className="diff">
       {hunks.map((hunk, hunkIndex) => (
         <div className="hunk" key={hunkIndex}>
           <div className="hunk-head">{hunk.header ?? `@@ hunk ${hunkIndex + 1} @@`}</div>
-          {(hunk.lines ?? []).map((line, lineIndex) => (
-            <div className={`line ${line.type}`} key={lineIndex}>
-              <span className="no">{line.oldNo ?? ''}</span>
-              <span className="no">{line.newNo ?? ''}</span>
-              <span className="sign">{line.type === 'add' ? '+' : line.type === 'del' ? '−' : ' '}</span>
-              <span className="text">{line.text}</span>
-            </div>
+          {(hunk.lines ?? []).map((line, lineIndex) => {
+            const notes = line.newNo === null || line.newNo === undefined ? undefined : byLine.get(line.newNo)
+            if (notes !== undefined) seenLines.add(line.newNo)
+            return (
+              <React.Fragment key={lineIndex}>
+                <div className={`line ${line.type}`}>
+                  <span className="no">{line.oldNo ?? ''}</span>
+                  <span className="no">{line.newNo ?? ''}</span>
+                  <span className="sign">{line.type === 'add' ? '+' : line.type === 'del' ? '−' : ' '}</span>
+                  <span className="text"><CodeText text={line.text} language={language} /></span>
+                </div>
+                {notes?.map((note, noteIndex) => <InlineNote key={`note-${noteIndex}`} note={note} />)}
+              </React.Fragment>
+            )
+          })}
+          {(byHunk.get(hunkIndex + 1) ?? []).map((note, noteIndex) => (
+            <InlineNote key={`hunk-note-${noteIndex}`} note={note} />
           ))}
         </div>
       ))}
+      {[...byLine.entries()]
+        .filter(([line]) => !seenLines.has(line))
+        .flatMap(([, notes]) => notes)
+        .map((note, index) => <InlineNote key={`fallback-${index}`} note={note} />)}
     </div>
   )
 }
@@ -312,17 +369,16 @@ export default function ReviewDetail({ review, onBack, send }) {
                   <div className="stale-note">The AI changed this file after you decided. Review the new content and decide again.</div>
                 ) : null}
                 {item.warning ? <div className="warning">{item.warning}</div> : null}
+                <DiffView entry={item} />
                 <div className="comment-row">
-                  <textarea
-                    className="comment-box"
-                    placeholder="Message to the AI (optional; sent with this decision)"
+                  <label className="comment-label" htmlFor={`review-comment-${itemIndex}`}>Message to the AI</label>
+                  <CommentBox
+                    id={`review-comment-${itemIndex}`}
                     value={comments[item.id] ?? ''}
-                    onChange={(event) => setComment(item.id, event.target.value)}
                     disabled={finished || busy}
+                    onChange={(event) => setComment(item.id, event.target.value)}
                   />
                 </div>
-                <NoteBar notes={item.notes} />
-                <DiffView entry={item} />
               </section>
             )
           })}

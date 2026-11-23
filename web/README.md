@@ -123,6 +123,7 @@ Browser -> server: `decision`, `line.request`, `ping`. Server -> browser:
 
 ## Next
 
-- W4: syntax highlighting/colored code in diffs (light theme), PWA/manifest,
-  push, TLS deployment docs.
-- Multiple bots / DSH instances submitting reviews under one user.
+- W4 syntax highlighting (light theme), inline AI notes, soft-wrapped diffs,
+  the collapsible app sidebar, and the topbar back button are shipped.
+- Remaining: PWA/manifest, push, TLS deployment docs, and multiple bots / DSH
+  instances submitting reviews under one user.
