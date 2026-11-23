@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.1
+
+- Web review decisions: per-file Approve/Reject and Finish in the browser;
+  decision reaches the plugin, applies via `decideReview`, and the finished
+  snapshot returns to the Web UI.
+- Standalone web UI moves to a pure white theme.
+- Forward `review.result.error` so failed decisions surface in the browser.
+
 ## 0.9.0
 
 - Standalone web review server (`web/`): passkey login, one-time pairing,

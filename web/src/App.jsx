@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { api, login, register } from './api.js'
+import WebReviewDetail from './ReviewDetail.jsx'
 
 const NAV_ITEMS = [
   { id: 'standby', label: 'Standby' },
@@ -596,7 +597,7 @@ export default function App() {
             return [summary, ...current.filter((item) => item.id !== next.id)]
           })
         } else if (message.type === 'review.result') {
-          setError('Review result received.')
+          if (typeof message.error === 'string' && message.error !== '') setError(message.error)
           loadReviews().catch(() => {})
         } else if (message.type === 'error') {
           setError(message.message ?? 'WebSocket error')
@@ -679,6 +680,11 @@ export default function App() {
     }
   }
 
+  const sendWs = (payload) => {
+    const socket = socketRef.current
+    if (socket !== null && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(payload))
+  }
+
   if (booting) return <div className="boot">Loading…</div>
   if (!user) return <AuthScreen onUser={onUser} />
 
@@ -697,8 +703,9 @@ export default function App() {
       {view === 'reviews' ? <Reviews reviews={reviews} onOpen={openReview} /> : null}
       {view === 'devices' ? <Devices devices={devices} pairing={pairing} onPair={createPairing} onRevoke={revokeDevice} /> : null}
       {view === 'review' ? (
-        <ReviewDetail
+        <WebReviewDetail
           review={review}
+          send={sendWs}
           onBack={() => {
             setView('reviews')
             setReview(null)
