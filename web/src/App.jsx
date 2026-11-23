@@ -37,9 +37,12 @@ function statusOf(review) {
 function AuthScreen({ onUser }) {
   const [mode, setMode] = useState('login')
   const [username, setUsername] = useState('')
+  const [key, setKey] = useState('')
+  const [generated, setGenerated] = useState(null)
+  const [generatedUser, setGeneratedUser] = useState(null)
+  const [copied, setCopied] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
-  const supported = typeof window !== 'undefined' && typeof window.PublicKeyCredential !== 'undefined'
 
   const submit = async (event) => {
     event.preventDefault()
@@ -47,8 +50,14 @@ function AuthScreen({ onUser }) {
     setBusy(true)
     setError(null)
     try {
-      const data = mode === 'register' ? await register(username.trim()) : await login(username.trim())
-      onUser(data.user)
+      if (mode === 'register') {
+        const data = await register(username.trim())
+        setGenerated(data.key)
+        setGeneratedUser(data.user)
+      } else {
+        const data = await login(username.trim(), key.trim())
+        onUser(data.user)
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause))
     } finally {
@@ -56,12 +65,38 @@ function AuthScreen({ onUser }) {
     }
   }
 
+  const copyKey = async () => {
+    try {
+      await navigator.clipboard.writeText(generated)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1500)
+    } catch {
+      setCopied(false)
+    }
+  }
+
+  if (generated) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <div className="brand-mark">DSH</div>
+          <h1>Save your user key</h1>
+          <p className="muted">This key is shown once. It is the only way to sign in to this account.</p>
+          <code style={{ display: 'block', padding: '10px', margin: '12px 0', border: '1px solid var(--border)', borderRadius: '7px', background: 'var(--bg)', wordBreak: 'break-all' }}>{generated}</code>
+          <button type="button" className="button" onClick={copyKey}>{copied ? 'Copied' : 'Copy key'}</button>
+          <p className="fineprint">Store it in a password manager. If you lose it, this local account cannot be recovered yet.</p>
+          <button type="button" className="button primary wide" onClick={() => onUser(generatedUser)}>I saved it — continue</button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="auth-page">
       <div className="auth-card">
         <div className="brand-mark">DSH</div>
         <h1>Review, remotely.</h1>
-        <p className="muted">A passkey-protected review surface for DSH. No password.</p>
+        <p className="muted">Sign in with a username and user key. No passkey.</p>
 
         <div className="auth-tabs">
           <button type="button" className={mode === 'login' ? 'tab active' : 'tab'} onClick={() => { setMode('login'); setError(null) }}>
@@ -78,20 +113,32 @@ function AuthScreen({ onUser }) {
             <input
               value={username}
               onChange={(event) => setUsername(event.target.value)}
-              autoComplete="username webauthn"
+              autoComplete="username"
               placeholder="your-name"
               disabled={busy}
             />
           </label>
+          {mode === 'login' ? (
+            <label className="field">
+              <span>User key</span>
+              <input
+                type="password"
+                value={key}
+                onChange={(event) => setKey(event.target.value)}
+                autoComplete="off"
+                placeholder="paste your user key"
+                disabled={busy}
+              />
+            </label>
+          ) : null}
           {error ? <div className="error">{error}</div> : null}
-          {!supported ? <div className="error">This browser does not expose WebAuthn. Use Safari/Chrome on localhost.</div> : null}
-          <button className="button primary wide" type="submit" disabled={busy || !supported || username.trim() === ''}>
-            {busy ? 'Waiting for passkey…' : mode === 'register' ? 'Create passkey' : 'Continue with passkey'}
+          <button className="button primary wide" type="submit" disabled={busy || username.trim() === '' || (mode === 'login' && key.trim() === '')}>
+            {busy ? '…' : mode === 'register' ? 'Create account' : 'Sign in'}
           </button>
         </form>
 
         <p className="fineprint">
-          Open <code>http://localhost:4317</code> (or the Vite origin) so WebAuthn has a secure context.
+          Registration issues a user key once. Use username + key to sign in. Bots and multiple DSH instances can pair later as devices.
         </p>
       </div>
     </div>

@@ -1,5 +1,3 @@
-import { startAuthentication, startRegistration } from '@simplewebauthn/browser'
-
 async function request(path, { method = 'GET', body } = {}) {
   const response = await fetch(path, {
     method,
@@ -23,25 +21,15 @@ async function request(path, { method = 'GET', body } = {}) {
 export const api = request
 
 export async function register(username) {
-  const options = await request('/api/auth/passkey/register/options', {
+  return request('/api/auth/register', {
     method: 'POST',
     body: { username },
-  })
-  const response = await startRegistration({ optionsJSON: options })
-  return request('/api/auth/passkey/register/verify', {
-    method: 'POST',
-    body: { username, response },
   })
 }
 
-export async function login(username) {
-  const options = await request('/api/auth/passkey/login/options', {
+export async function login(username, key) {
+  return request('/api/auth/login', {
     method: 'POST',
-    body: { username },
-  })
-  const response = await startAuthentication({ optionsJSON: options })
-  return request('/api/auth/passkey/login/verify', {
-    method: 'POST',
-    body: { username, response },
+    body: { username, key },
   })
 }

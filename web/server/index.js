@@ -19,6 +19,7 @@
 import Fastify from 'fastify'
 import cookie from '@fastify/cookie'
 import { WebSocketServer, WebSocket } from 'ws'
+import { registerKeyAuth } from './key-auth.js'
 import { DatabaseSync } from 'node:sqlite'
 import { createHash, randomBytes, randomInt } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync } from 'node:fs'
@@ -269,6 +270,8 @@ const broadcastDeviceStatus = (userId, deviceId, online) => {
     if (ws.user?.id === userId) send(ws, { type: 'device.status', deviceId, online, lastSeen: now() })
   }
 }
+
+registerKeyAuth(app, { db, sha256, newId, createSession, setSessionCookie, audit, rateLimit, fail })
 
 app.get('/api/health', async () => ({
   ok: true,
@@ -603,6 +606,7 @@ wssDevice.on('connection', (ws, _request, device) => {
         reviewId: message.reviewId,
         results: Array.isArray(message.results) ? message.results : [],
         version: message.version,
+        error: typeof message.error === 'string' ? message.error : undefined,
       })
       audit(device.user_id, 'review-result', String(message.reviewId ?? ''))
       return
