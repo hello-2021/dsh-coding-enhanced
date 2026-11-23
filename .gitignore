@@ -2,4 +2,5 @@ node_modules/
 dist/
 *.tgz
 web/package-lock.json
+review-demo/
 .DS_Store

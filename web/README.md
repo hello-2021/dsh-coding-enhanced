@@ -1,33 +1,39 @@
 # dsh-coding-enhanced-web
 
-Standalone web review server for `dsh-coding-enhanced`. This is the **W1a
-skeleton**: passkey auth, DSH device pairing, device/browser WSS, and a review
-snapshot cache. The React review UI and the plugin-side outbound WSS client are
-the next slices.
+Standalone web review server for `dsh-coding-enhanced`.
 
-## Scope
-
-- username + passkey registration / login (WebAuthn, `@simplewebauthn/server`);
-- one-time pairing code -> device token (hash stored server-side);
-- `/ws/device`: plugin outbound WSS, receives `review.snapshot` / `review.update`
-  / `review.result`;
-- `/ws/browser`: passkey session cookie, receives snapshots and sends
-  `decision` / `line.request` to the paired device;
-- `/api/reviews` / `/api/reviews/:id`: cached review list and snapshot;
+- **Username + user key** auth. Registration issues a 32-byte key once; the
+  server stores only `sha256(key)` and a 6-character hint.
+- One-time pairing code -> device token (only the token hash is stored).
+- `/ws/device`: plugin outbound WSS; receives `review.snapshot` /
+  `review.update` / `review.result`.
+- `/ws/browser`: session cookie; receives snapshots and sends `decision` /
+  `line.request` to the paired device.
+- `/api/reviews` / `/api/reviews/:id`: cached review list and snapshot.
 - SQLite via Node's built-in `node:sqlite` (no native `better-sqlite3`).
+- React UI: Standby, Devices, Reviews, Review detail; per-file Approve/Reject
+  and Finish (W3); pure white theme.
 
-Not in W1a: React review UI (W1b), plugin outbound client (W2), decisions applied
-end-to-end (W3), PWA/push (W4).
+Passkey/WebAuthn is **not** used.
 
 ## Run
 
 Requires Node **>= 22.5** (Node 24 tested; `node:sqlite`).
 
+Server:
+
 ```bash
 cd web
 npm install
-npm run dev:server
-# open http://localhost:4317
+ORIGIN=http://localhost:5173 node server/index.js --port 4317 --data ~/.dsh-coding-enhanced-web
+```
+
+Vite dev UI (separate terminal):
+
+```bash
+cd web
+npm run dev:web
+# open http://localhost:5173
 ```
 
 Defaults:
@@ -37,15 +43,20 @@ Defaults:
 | `--port` | `4317` | |
 | `--host` | `127.0.0.1` | binding only; open `localhost` |
 | `--data` | `~/.dsh-coding-enhanced-web` | SQLite lives here |
-| `--rp-id` | `localhost` | WebAuthn RP ID |
 | `--origin` | `http://localhost:<port>` | must match the browser origin |
 
-Passkeys require a secure context. Open **`http://localhost:4317`**, not
-`http://127.0.0.1:4317` — some browsers reject an IP RP ID. For LAN/remote use,
-put the server behind HTTPS and set `--origin` / `--rp-id` explicitly.
+For Vite dev, start the server with `ORIGIN=http://localhost:5173` so the
+session cookie and the page share an origin. For LAN/remote use, put the server
+behind HTTPS and set `--origin` explicitly.
 
-For Vite dev (`npm run dev:web`, port 5173), start the server with
-`ORIGIN=http://localhost:5173` so WebAuthn verification matches the page origin.
+## Auth
+
+1. `POST /api/auth/register` with `{ username }`; the server returns
+   `{ user, key }` once.
+2. Save the key (password manager). It is the only way to sign in.
+3. `POST /api/auth/login` with `{ username, key }`; the server compares the
+   `sha256` hash with `timingSafeEqual` and sets an `HttpOnly` session cookie.
+4. There is no password and no passkey. No plaintext user key is stored.
 
 ## Pairing flow
 
@@ -56,18 +67,16 @@ For Vite dev (`npm run dev:web`, port 5173), start the server with
 4. Plugin connects `ws://localhost:4317/ws/device?token=<token>`.
 5. Browser connects `ws://localhost:4317/ws/browser` with the session cookie.
 
-The plugin should store the token locally and reconnect with 1s/2s/5s/10s
-backoff, sending its current `review.snapshot` after `hello`.
+The plugin stores the token locally and reconnects with 1s/2s/5s/10s backoff,
+sending its current `review.snapshot` after `hello`.
 
 ## REST
 
 | Method | Path | Auth |
 |---|---|---|
 | GET | `/api/health` | none |
-| POST | `/api/auth/passkey/register/options` | none (username) |
-| POST | `/api/auth/passkey/register/verify` | none (challenge) |
-| POST | `/api/auth/passkey/login/options` | none (username) |
-| POST | `/api/auth/passkey/login/verify` | none (challenge) |
+| POST | `/api/auth/register` | none (username) |
+| POST | `/api/auth/login` | none (username + key) |
 | GET | `/api/auth/me` | session |
 | POST | `/api/auth/logout` | session |
 | POST | `/api/devices/pairing-code` | session |
@@ -90,10 +99,10 @@ Server -> plugin:
 Plugin -> server:
 
 ```json
-{ "type": "hello", "deviceId": "device-...", "pluginVersion": "0.8.5", "capabilities": {} }
+{ "type": "hello", "deviceId": "device-...", "pluginVersion": "0.9.1", "capabilities": {} }
 { "type": "review.snapshot", "review": { "id": "review-...", "version": 1, "sessionId": "...", "status": "open", "title": "...", "files": [] } }
 { "type": "review.update", "review": {} }
-{ "type": "review.result", "reviewId": "...", "results": [], "version": 1 }
+{ "type": "review.result", "reviewId": "...", "results": [], "version": 1, "error": "optional" }
 ```
 
 Browser -> server: `decision`, `line.request`, `ping`. Server -> browser:
@@ -101,20 +110,19 @@ Browser -> server: `decision`, `line.request`, `ping`. Server -> browser:
 
 ## Security notes
 
-- Device token: 32 random bytes, server stores only `sha256(token)`; revoke via
+- User key: 32 random bytes; only `sha256(key)` and a 6-character hint are
+  stored. Registration/login are rate-limited.
+- Device token: 32 random bytes; only `sha256(token)` is stored. Revoke via
   `DELETE /api/devices/:id`.
 - Pairing code: one-time, 10 minute TTL, rate-limited.
 - Session: random 32-byte token in an `HttpOnly`, `SameSite=Lax` cookie; the
-  server stores only its hash. CSRF hardening and a per-session CSRF token are
-  a W3/W4 item.
+  server stores only its hash.
 - CSP and `X-Content-Type-Options` are set on HTTP responses; code/AI text must
   be escaped by the UI.
 - AI keys never enter this server; AI still runs in DSH.
 
 ## Next
 
-- W1b: React + Vite review UI (login/register, standby, reviews, review detail,
-  devices) using `docs/ui-directions/index.html` as the visual reference.
-- W2: plugin Web settings + outbound WSS + snapshot sync.
-- W3: decision/edit/finish end-to-end, reconnect, offline read-only.
-- W4: PWA/manifest, push, rate-limit/audit hardening, TLS deployment docs.
+- W4: syntax highlighting/colored code in diffs (light theme), PWA/manifest,
+  push, TLS deployment docs.
+- Multiple bots / DSH instances submitting reviews under one user.
