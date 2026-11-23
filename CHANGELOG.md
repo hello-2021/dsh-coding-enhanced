@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.0
+
+- Standalone web review server (`web/`): passkey login, one-time pairing,
+  device/browser WSS, review snapshot cache, React UI.
+- Plugin Web review settings: URL + pairing code, outbound WSS, review.snapshot
+  sync, online/offline status.
+- File-target shell gate (`lib/detect-writes.js`): installs, builds and tests
+  pass; protected workspace writes block; artifacts pass; turn/end audit stays
+  the backstop.
+- Remove the 120s `review_bash` timeout; maxBuffer stays at 8 MiB.
+
 ## 0.8.5
 
 - Native `bash` is denied while Pre-review is on; shell commands go through
