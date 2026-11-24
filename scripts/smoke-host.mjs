@@ -37,6 +37,7 @@ const ctx = {
   },
   sessions: { get() { return undefined } },
   subagents: {},
+  agents: { get() { return undefined } },
   connection: { fetch: { register(options) { handler = options.fetch } } },
 }
 

@@ -339,6 +339,11 @@ once), then generate a pairing code under **Devices**. In DSH open
 the code, and pair. Choose **Web** or **Both** in the input-bar **Review tools**
 popover.
 
+The web UI also has a persistent **Ask AI** box at the bottom of its left
+sidebar. Ask about any cached review by its `review-xxxx` name; history is
+kept in the web server SQLite database, and the answer comes from a sidecar
+agent so the open review and its waiter are not touched.
+
 For Vite HMR during development, run the server with
 `ORIGIN=http://localhost:5173` and use `npm run dev:web` (port 5173) instead of
 the built page.

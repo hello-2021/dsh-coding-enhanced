@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.3
+
+- Global review sidebar chat: a persistent bottom-left thread for questions
+  about any review, with SQLite history and a sidecar agent that leaves the
+  main review turn and its waiter untouched.
+- Review groups get a `review-xxxx` name from the change content; the chat
+  catalog uses those names for natural-language references.
+  Duplicate names are made unique with `-2`, `-3` suffixes.
+
 ## 0.9.2
 
 - Three-way **Review channel** switch in the Review tools popover: **Web** (standalone

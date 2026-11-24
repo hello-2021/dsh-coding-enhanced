@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { api, login, register } from './api.js'
 import WebReviewDetail from './ReviewDetail.jsx'
+import ChatPanel from './ChatPanel.jsx'
 
 const NAV_ITEMS = [
   { id: 'standby', label: 'Standby' },
@@ -144,7 +145,7 @@ function AuthScreen({ onUser }) {
   )
 }
 
-function Shell({ user, view, onNavigate, onBack, socketState, devices, onLogout, children }) {
+function Shell({ user, view, onNavigate, onBack, socketState, devices, onLogout, children, chat, onSendChat }) {
   const online = devices.filter((device) => device.online).length
   const [collapsed, setCollapsed] = useState(() => {
     try {
@@ -179,6 +180,7 @@ function Shell({ user, view, onNavigate, onBack, socketState, devices, onLogout,
             </button>
           ))}
         </nav>
+        <ChatPanel messages={chat.messages} busy={chat.busy} error={chat.error} onSend={onSendChat} />
         <div className="sidebar-foot">
           <div className="device-summary">
             <span className={online > 0 ? 'dot online' : 'dot'} />
@@ -430,6 +432,7 @@ export default function App() {
   const [error, setError] = useState(null)
   const [socketState, setSocketState] = useState('connecting')
   const socketRef = useRef(null)
+  const [chat, setChat] = useState({ messages: [], busy: false, error: null })
 
   const loadDevices = useCallback(async () => {
     const data = await api('/api/devices')
@@ -439,6 +442,15 @@ export default function App() {
   const loadReviews = useCallback(async () => {
     const data = await api('/api/reviews')
     setReviews(Array.isArray(data.reviews) ? data.reviews : [])
+  }, [])
+
+  const loadChat = useCallback(async () => {
+    try {
+      const data = await api('/api/chat')
+      setChat({ messages: Array.isArray(data.messages) ? data.messages : [], busy: false, error: null })
+    } catch (cause) {
+      setChat({ messages: [], busy: false, error: cause instanceof Error ? cause.message : String(cause) })
+    }
   }, [])
 
   useEffect(() => {
@@ -454,6 +466,10 @@ export default function App() {
     loadReviews().catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)))
     return undefined
   }, [user, loadDevices, loadReviews])
+
+  useEffect(() => {
+    if (user) void loadChat()
+  }, [user, loadChat])
 
   useEffect(() => {
     if (!user) return undefined
@@ -498,6 +514,14 @@ export default function App() {
         } else if (message.type === 'review.result') {
           if (typeof message.error === 'string' && message.error !== '') setError(message.error)
           loadReviews().catch(() => {})
+        } else if (message.type === 'chat.message') {
+          const incoming = { id: message.id, role: message.role, text: message.text, createdAt: message.createdAt ?? Date.now() }
+          setChat((current) => {
+            if (incoming.id !== undefined && current.messages.some((item) => item.id === incoming.id)) return current
+            return { ...current, messages: [...current.messages, incoming], busy: message.role === 'assistant' ? false : current.busy, error: null }
+          })
+        } else if (message.type === 'chat.error') {
+          setChat((current) => ({ ...current, busy: false, error: message.message ?? 'Chat failed' }))
         } else if (message.type === 'error') {
           setError(message.message ?? 'WebSocket error')
         }
@@ -541,6 +565,7 @@ export default function App() {
     setReviews([])
     setDevices([])
     setPairing(null)
+    setChat({ messages: [], busy: false, error: null })
     setView('standby')
   }
 
@@ -588,6 +613,17 @@ export default function App() {
     }
   }
 
+  const sendChat = (text) => {
+    const socket = socketRef.current
+    if (socket === null || socket.readyState !== WebSocket.OPEN) {
+      setChat((current) => ({ ...current, error: 'WebSocket is not connected.' }))
+      return
+    }
+    const requestId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : String(Date.now())
+    setChat((current) => ({ ...current, busy: true, error: null }))
+    socket.send(JSON.stringify({ type: 'chat.send', requestId, text }))
+  }
+
   const sendWs = (payload) => {
     const socket = socketRef.current
     if (socket !== null && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(payload))
@@ -597,7 +633,7 @@ export default function App() {
   if (!user) return <AuthScreen onUser={onUser} />
 
   return (
-    <Shell user={user} view={view} onNavigate={onNavigate} onBack={goBack} socketState={socketState} devices={devices} onLogout={onLogout}>
+    <Shell user={user} view={view} onNavigate={onNavigate} onBack={goBack} socketState={socketState} devices={devices} onLogout={onLogout} chat={chat} onSendChat={sendChat}>
       {view === 'standby' ? (
         <Standby
           devices={devices}

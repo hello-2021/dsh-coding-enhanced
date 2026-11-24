@@ -90,6 +90,15 @@ CREATE TABLE IF NOT EXISTS reviews (
   updated_at INTEGER NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  review_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  role TEXT NOT NULL,
+  text TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS audit (
   id TEXT PRIMARY KEY,
   at INTEGER NOT NULL,
@@ -101,6 +110,7 @@ CREATE TABLE IF NOT EXISTS audit (
 CREATE INDEX IF NOT EXISTS idx_devices_user ON devices(user_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_device ON reviews(device_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_updated ON reviews(updated_at);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_review ON chat_messages(review_id, id);
 `)
 
 db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(Date.now())
@@ -115,6 +125,33 @@ const fromJson = (value, fallback) => {
   } catch {
     return fallback
   }
+}
+
+const compactReview = (payload) => {
+  if (payload === null || typeof payload !== 'object') return null
+  return {
+    id: payload.id,
+    title: payload.title ?? payload.name ?? payload.id,
+    sessionId: payload.sessionId,
+    submitted: payload.submitted === true,
+    finished: payload.finished === true,
+    canceled: payload.canceled === true,
+    entries: (Array.isArray(payload.entries) ? payload.entries : []).slice(0, 20).map((entry) => ({
+      display: entry.display,
+      tool: entry.tool,
+      isNew: entry.isNew,
+      added: entry.added,
+      removed: entry.removed,
+      warning: entry.warning,
+      notes: entry.notes,
+      hunks: Array.isArray(entry.hunks) ? entry.hunks.slice(0, 20) : [],
+    })),
+  }
+}
+
+const reviewCatalogFor = (userId) => {
+  const rows = db.prepare('SELECT r.payload FROM reviews r JOIN devices d ON d.id = r.device_id WHERE d.user_id = ? ORDER BY r.updated_at DESC LIMIT 50').all(userId)
+  return rows.map((row) => compactReview(fromJson(row.payload, null))).filter((review) => review !== null)
 }
 
 const sessionCookie = 'ce_session'
@@ -359,6 +396,22 @@ app.get('/api/reviews/:id', async (request, reply) => {
   if (!row) return fail(reply, 404, 'review not found')
   return { review: fromJson(row.payload, null) }
 })
+app.get('/api/reviews/:id/chat', async (request, reply) => {
+  const user = userFromRequest(request)
+  if (!user) return fail(reply, 401, 'unauthorized')
+  const review = db.prepare('SELECT r.id FROM reviews r JOIN devices d ON d.id = r.device_id WHERE r.id = ? AND d.user_id = ?').get(request.params.id, user.id)
+  if (!review) return fail(reply, 404, 'review not found')
+  const rows = db.prepare('SELECT id, role, text, created_at FROM chat_messages WHERE review_id = ? AND user_id = ? ORDER BY id ASC LIMIT 200').all(request.params.id, user.id)
+  return { messages: rows.map((row) => ({ id: row.id, role: row.role, text: row.text, createdAt: row.created_at })) }
+})
+
+app.get('/api/chat', async (request, reply) => {
+  const user = userFromRequest(request)
+  if (!user) return fail(reply, 401, 'unauthorized')
+  const rows = db.prepare('SELECT id, role, text, created_at FROM chat_messages WHERE review_id = ? AND user_id = ? ORDER BY id ASC LIMIT 200').all('global', user.id)
+  return { messages: rows.map((row) => ({ id: row.id, role: row.role, text: row.text, createdAt: row.created_at })) }
+})
+
 
 const indexHtml = () => {
   const built = join(distDir, 'index.html')
@@ -419,6 +472,7 @@ wssDevice.on('connection', (ws, _request, device) => {
   deviceSockets.set(device.id, ws)
   db.prepare('UPDATE devices SET last_seen = ? WHERE id = ?').run(now(), device.id)
   send(ws, { type: 'hello', deviceId: device.id, serverTime: now() })
+  send(ws, { type: 'review.catalog', reviews: reviewCatalogFor(device.user_id) })
   broadcastDeviceStatus(device.user_id, device.id, true)
 
   ws.on('message', (raw) => {
@@ -467,6 +521,20 @@ wssDevice.on('connection', (ws, _request, device) => {
       audit(device.user_id, 'review-result', String(message.reviewId ?? ''))
       return
     }
+    if (message.type === 'chat.message' || message.type === 'chat.error') {
+      const requestId = typeof message.requestId === 'string' ? message.requestId : ''
+      if (message.type === 'chat.message') {
+        const text = String(message.text ?? '').trim()
+        if (text === '') return
+        const createdAt = now()
+        const info = db.prepare('INSERT INTO chat_messages (review_id, user_id, role, text, created_at) VALUES (?, ?, ?, ?, ?)').run('global', device.user_id, 'assistant', text, createdAt)
+        broadcastBrowsers(device.user_id, { type: 'chat.message', requestId, id: Number(info.lastInsertRowid), role: 'assistant', text, createdAt })
+      } else {
+        broadcastBrowsers(device.user_id, { type: 'chat.error', requestId, message: typeof message.message === 'string' ? message.message : 'Chat failed' })
+      }
+      return
+    }
+
 
     if (message.type === 'pong') {
       db.prepare('UPDATE devices SET last_seen = ? WHERE id = ?').run(now(), device.id)
@@ -503,6 +571,35 @@ wssBrowser.on('connection', (ws, _request, user) => {
 
     if (message.type === 'ping') {
       send(ws, { type: 'pong' })
+      return
+    }
+
+    if (message.type === 'chat.send') {
+      const text = String(message.text ?? '').trim()
+      if (text === '') {
+        send(ws, { type: 'error', requestId: message.requestId, message: 'write a question first' })
+        return
+      }
+      if (text.length > 8000) {
+        send(ws, { type: 'error', requestId: message.requestId, message: 'question is too long' })
+        return
+      }
+      if (!rateLimit(`chat:${user.id}`, 60)) {
+        send(ws, { type: 'error', requestId: message.requestId, message: 'too many messages' })
+        return
+      }
+      const devices = db.prepare('SELECT * FROM devices WHERE user_id = ? AND revoked_at IS NULL ORDER BY last_seen DESC').all(user.id)
+      const target = devices.find((candidate) => deviceSockets.has(candidate.id))
+      if (target === undefined) {
+        send(ws, { type: 'error', requestId: message.requestId, message: 'DSH is offline' })
+        return
+      }
+      const requestId = typeof message.requestId === 'string' ? message.requestId : newId('req')
+      const createdAt = now()
+      const info = db.prepare('INSERT INTO chat_messages (review_id, user_id, role, text, created_at) VALUES (?, ?, ?, ?, ?)').run('global', user.id, 'user', text, createdAt)
+      broadcastBrowsers(user.id, { type: 'chat.message', requestId, id: Number(info.lastInsertRowid), role: 'user', text, createdAt })
+      send(deviceSockets.get(target.id), { type: 'chat.send', requestId, text })
+      audit(user.id, 'chat-send', 'global')
       return
     }
 

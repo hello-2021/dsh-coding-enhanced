@@ -1,6 +1,6 @@
 {
   "name": "dsh-coding-enhanced",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "The DSH change gate: queue AI edits before write, rewind turns with shadow-git snapshots, and hand review to a non-blocking waiter subagent.",
   "type": "module",
   "main": "lib/index.js",
@@ -42,7 +42,7 @@
   "author": "dsh-coding-enhanced contributors",
   "scripts": {
     "check": "node --check lib/index.js && node --check lib/client.js && node --check lib/web-bridge.js",
-    "test": "node scripts/smoke-host.mjs",
+    "test": "node scripts/smoke-host.mjs && node scripts/smoke-chat.mjs",
     "web:build": "npm --prefix web run build",
     "pack": "node -e \"require('node:fs').mkdirSync('dist',{recursive:true})\" && npm pack --pack-destination dist"
   },

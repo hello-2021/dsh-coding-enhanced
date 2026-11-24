@@ -8,11 +8,12 @@ Standalone web review server for `dsh-coding-enhanced`.
 - `/ws/device`: plugin outbound WSS; receives `review.snapshot` /
   `review.update` / `review.result`.
 - `/ws/browser`: session cookie; receives snapshots and sends `decision` /
-  `line.request` to the paired device.
+  `line.request` / `chat.send` to the paired device.
 - `/api/reviews` / `/api/reviews/:id`: cached review list and snapshot.
+- `/api/chat`: global chat history.
 - SQLite via Node's built-in `node:sqlite` (no native `better-sqlite3`).
-- React UI: Standby, Devices, Reviews, Review detail; per-file Approve/Reject
-  and Finish (W3); pure white theme.
+- React UI: Standby, Devices, Reviews, Review detail with a persistent Ask AI
+  box in the left sidebar; per-file Approve/Reject and Finish; pure white theme.
 
 Passkey/WebAuthn is **not** used.
 
