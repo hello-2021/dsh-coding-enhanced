@@ -315,6 +315,46 @@ confirmation lists those turns.
 
 ---
 
+## 🌐 Standalone web review
+
+The standalone Web review app is **not part of the plugin tarball**. The npm
+package ships only `lib/`, `docs/`, `README.md`, `CHANGELOG.md` and the bundle
+patch; the React review UI and its Node server live in [`web/`](web/) in this
+repository. Install the plugin normally if you only want the DSH sidebar review.
+
+### Run the web app
+
+Requires Node **>= 22.5**.
+
+```sh
+cd web
+npm install
+npm run build
+node server/index.js --port 4317 --data ~/.dsh-coding-enhanced-web
+```
+
+Open <http://localhost:4317>, register a username + user key (the key is shown
+once), then generate a pairing code under **Devices**. In DSH open
+**Settings → Coding Enhanced → Web review**, enter `http://localhost:4317` and
+the code, and pair. Choose **Web** or **Both** in the input-bar **Review tools**
+popover.
+
+For Vite HMR during development, run the server with
+`ORIGIN=http://localhost:5173` and use `npm run dev:web` (port 5173) instead of
+the built page.
+
+### Distribution
+
+- **Plugin-only users**: install the tarball from Releases; no web assets are
+  downloaded.
+- **Web review users**: clone the repository (or copy `web/`), then run the
+  build and server steps above. Ship `web/` source, or `web/dist` + `server/`
+  together; the server serves the built page and assets when `dist/index.html`
+  exists.
+- Put the server behind HTTPS/reverse proxy and set `ORIGIN` for remote use.
+
+---
+
 <a id="how-it-works"></a>
 
 ## 🧠 How it works

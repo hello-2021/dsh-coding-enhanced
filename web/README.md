@@ -20,19 +20,24 @@ Passkey/WebAuthn is **not** used.
 
 Requires Node **>= 22.5** (Node 24 tested; `node:sqlite`).
 
-Server:
+Production:
 
 ```bash
 cd web
 npm install
-ORIGIN=http://localhost:5173 node server/index.js --port 4317 --data ~/.dsh-coding-enhanced-web
+npm run build
+node server/index.js --port 4317 --data ~/.dsh-coding-enhanced-web
+# open http://localhost:4317
 ```
 
-Vite dev UI (separate terminal):
+The server serves `dist/` after the build. Before the first build it falls back
+to the small `public/index.html` health page.
+
+Vite dev UI with HMR (separate terminal):
 
 ```bash
-cd web
-npm run dev:web
+ORIGIN=http://localhost:5173 node server/index.js --port 4317 --data ~/.dsh-coding-enhanced-web
+cd web && npm run dev:web
 # open http://localhost:5173
 ```
 

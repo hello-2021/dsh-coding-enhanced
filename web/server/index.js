@@ -23,11 +23,12 @@ import { DatabaseSync } from 'node:sqlite'
 import { createHash, randomBytes, randomInt } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const publicDir = join(here, '..', 'public')
+const distDir = join(here, '..', 'dist')
 const argv = process.argv.slice(2)
 const arg = (name, fallback) => {
   const index = argv.indexOf(`--${name}`)
@@ -360,10 +361,28 @@ app.get('/api/reviews/:id', async (request, reply) => {
 })
 
 const indexHtml = () => {
-  const file = join(publicDir, 'index.html')
+  const built = join(distDir, 'index.html')
+  const file = existsSync(built) ? built : join(publicDir, 'index.html')
   if (existsSync(file)) return readFileSync(file, 'utf8')
   return '<!doctype html><title>DSH Review</title><h1>DSH Review</h1>'
 }
+const ASSET_TYPES = {
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.woff2': 'font/woff2',
+}
+app.get('/assets/*', async (request, reply) => {
+  const name = String(request.params['*'] ?? '')
+  const assetsDir = join(distDir, 'assets')
+  const file = resolve(assetsDir, name)
+  if (name === '' || !file.startsWith(resolve(assetsDir) + sep) || !existsSync(file)) return reply.code(404).send({ error: 'not found' })
+  const ext = name.slice(name.lastIndexOf('.'))
+  return reply.type(ASSET_TYPES[ext] ?? 'application/octet-stream').send(readFileSync(file))
+})
 app.get('/', async (_request, reply) => reply.type('text/html').send(indexHtml()))
 app.get('/favicon.ico', async (_request, reply) => reply.code(204).send())
 app.setNotFoundHandler((request, reply) => {
