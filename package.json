@@ -42,7 +42,7 @@
   "author": "dsh-coding-enhanced contributors",
   "scripts": {
     "check": "node --check lib/index.js && node --check lib/client.js && node --check lib/web-bridge.js",
-    "test": "node scripts/smoke-host.mjs && node scripts/smoke-chat.mjs",
+    "test": "node scripts/smoke-host.mjs && node scripts/smoke-chat.mjs && node scripts/smoke-rounds.mjs",
     "web:build": "npm --prefix web run build",
     "pack": "node -e \"require('node:fs').mkdirSync('dist',{recursive:true})\" && npm pack --pack-destination dist"
   },

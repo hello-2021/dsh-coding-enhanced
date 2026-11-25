@@ -2,12 +2,18 @@
 
 ## 0.9.3
 
-- Global review sidebar chat: a persistent bottom-left thread for questions
-  about any review, with SQLite history and a sidecar agent that leaves the
-  main review turn and its waiter untouched.
+- Global review sidebar chat: a persistent bottom-left thread delivered as a
+  user turn to the live main agent, so it uses the session cache and can queue
+  changes into the open review.
 - Review groups get a `review-xxxx` name from the change content; the chat
   catalog uses those names for natural-language references.
   Duplicate names are made unique with `-2`, `-3` suffixes.
+- Chat sends a compact review index and details only for explicitly named
+  reviews; it appends to the existing session instead of forking it.
+- AI revisions to an open review form rounds; the latest round is marked
+  `NEW` in both the web and built-in review panels.
+- User edits survive later AI rounds; Reset returns to the latest revision.
+- The web Finish bar floats, and returning to the review list scrolls to top.
 
 ## 0.9.2
 

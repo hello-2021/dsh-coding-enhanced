@@ -598,7 +598,12 @@ wssBrowser.on('connection', (ws, _request, user) => {
       const createdAt = now()
       const info = db.prepare('INSERT INTO chat_messages (review_id, user_id, role, text, created_at) VALUES (?, ?, ?, ?, ?)').run('global', user.id, 'user', text, createdAt)
       broadcastBrowsers(user.id, { type: 'chat.message', requestId, id: Number(info.lastInsertRowid), role: 'user', text, createdAt })
-      send(deviceSockets.get(target.id), { type: 'chat.send', requestId, text })
+      let sessionId = typeof message.sessionId === 'string' ? message.sessionId : ''
+      if (sessionId === '') {
+        const latest = db.prepare('SELECT r.session_id FROM reviews r JOIN devices d ON d.id = r.device_id WHERE d.user_id = ? ORDER BY r.updated_at DESC LIMIT 1').get(user.id)
+        sessionId = typeof latest?.session_id === 'string' ? latest.session_id : ''
+      }
+      send(deviceSockets.get(target.id), { type: 'chat.send', requestId, text, sessionId })
       audit(user.id, 'chat-send', 'global')
       return
     }

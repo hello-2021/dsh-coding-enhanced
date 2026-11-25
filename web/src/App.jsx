@@ -574,6 +574,10 @@ export default function App() {
     if (next !== 'review') setReview(null)
   }
 
+  const resetScroll = () => {
+    if (typeof window !== 'undefined') window.scrollTo(0, 0)
+  }
+
   const goBack = () => {
     if (view === 'review') {
       setView('reviews')
@@ -581,6 +585,7 @@ export default function App() {
       setView('standby')
     }
     setReview(null)
+    resetScroll()
   }
 
   const createPairing = async () => {
@@ -608,6 +613,7 @@ export default function App() {
       const data = await api(`/api/reviews/${id}`)
       setReview(data.review)
       setView('review')
+      resetScroll()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause))
     }
@@ -621,7 +627,7 @@ export default function App() {
     }
     const requestId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : String(Date.now())
     setChat((current) => ({ ...current, busy: true, error: null }))
-    socket.send(JSON.stringify({ type: 'chat.send', requestId, text }))
+    socket.send(JSON.stringify({ type: 'chat.send', requestId, text, sessionId: review?.sessionId }))
   }
 
   const sendWs = (payload) => {

@@ -80,11 +80,18 @@ function CodeText({ text, language }) {
   )
 }
 
-function DiffView({ entry }) {
+function DiffView({ entry, highlightRound }) {
   if (!entry) return null
   const hunks = Array.isArray(entry.hunks) ? entry.hunks : []
   const language = languageOf(entry.display ?? entry.path)
   const { byLine, byHunk } = notesByAnchor(entry.notes)
+  const roundLines = new Set()
+  for (const hunk of Array.isArray(entry.roundHunks) ? entry.roundHunks : []) {
+    for (const line of Array.isArray(hunk.lines) ? hunk.lines : []) {
+      if (line.type === 'add' && Number.isInteger(line.newNo)) roundLines.add(line.newNo)
+    }
+  }
+  const showRound = highlightRound === true
   if (hunks.length === 0) {
     return (
       <div className="empty">
@@ -104,7 +111,7 @@ function DiffView({ entry }) {
             if (notes !== undefined) seenLines.add(line.newNo)
             return (
               <React.Fragment key={lineIndex}>
-                <div className={`line ${line.type}`}>
+                <div className={`line ${line.type}${showRound && line.type === 'add' && roundLines.has(line.newNo) ? ' round-new' : ''}`}>
                   <span className="no">{line.oldNo ?? ''}</span>
                   <span className="no">{line.newNo ?? ''}</span>
                   <span className="sign">{line.type === 'add' ? '+' : line.type === 'del' ? '−' : ' '}</span>
@@ -129,6 +136,7 @@ function DiffView({ entry }) {
 
 function decisionLabel(decision) {
   if (decision?.stale === true) return { className: 'pill submitted', text: 'changed' }
+  if (decision?.incoming === true) return { className: 'pill open', text: 'edit kept' }
   if (decision?.outcome === 'edited') return { className: 'pill open', text: 'edited' }
   if (decision?.approved === true) return { className: 'pill ok', text: 'approve' }
   if (decision?.approved === false) return { className: 'pill canceled', text: 'reject' }
@@ -144,6 +152,7 @@ export default function ReviewDetail({ review, onBack, send }) {
   const [viewer, setViewer] = useState(null)
   const [viewerTab, setViewerTab] = useState('after')
   const [draft, setDraft] = useState('')
+  const [roundAck, setRoundAck] = useState({})
 
   useEffect(() => {
     setDecisions({})
@@ -151,6 +160,7 @@ export default function ReviewDetail({ review, onBack, send }) {
     setSubmitting(false)
     setNotice(null)
     setViewer(null)
+    setRoundAck({})
   }, [review?.id])
 
   useEffect(() => {
@@ -162,6 +172,23 @@ export default function ReviewDetail({ review, onBack, send }) {
         const decision = current[item.id]
         if (!decision) continue
         const entryChanged = typeof decision.baseAfterText === 'string' && typeof item.afterText === 'string' && decision.baseAfterText !== item.afterText
+        if (decision.outcome === 'edited') {
+          if (entryChanged) {
+            next[item.id] = {
+              ...decision,
+              baseAfterText: typeof item.afterText === 'string' ? item.afterText : decision.baseAfterText,
+              incoming: true,
+              stale: false,
+            }
+            changed = true
+          } else if (decision.incoming === true) {
+            const copy = { ...decision }
+            delete copy.incoming
+            next[item.id] = copy
+            changed = true
+          }
+          continue
+        }
         if (entryChanged && decision.stale !== true) {
           next[item.id] = { ...decision, stale: true }
           changed = true
@@ -208,6 +235,7 @@ export default function ReviewDetail({ review, onBack, send }) {
         baseAfterText: typeof target.afterText === 'string' ? target.afterText : undefined,
       },
     }))
+    setRoundAck((current) => ({ ...current, [target.id]: target.round ?? 1 }))
   }
 
   const decideAll = (approved) => {
@@ -224,6 +252,7 @@ export default function ReviewDetail({ review, onBack, send }) {
       }
       return next
     })
+    setRoundAck(Object.fromEntries(entries.map((item) => [item.id, item.round ?? 1])))
   }
 
   const openViewer = (target, mode) => {
@@ -253,6 +282,18 @@ export default function ReviewDetail({ review, onBack, send }) {
         baseAfterText: typeof target.afterText === 'string' ? target.afterText : undefined,
       },
     }))
+    setRoundAck((current) => ({ ...current, [target.id]: target.round ?? 1 }))
+    setViewer(null)
+  }
+
+  const resetEntry = (target) => {
+    if (!target) return
+    setDecisions((current) => {
+      const next = { ...current }
+      delete next[target.id]
+      return next
+    })
+    setRoundAck((current) => ({ ...current, [target.id]: target.round ?? 1 }))
     setViewer(null)
   }
 
@@ -329,6 +370,8 @@ export default function ReviewDetail({ review, onBack, send }) {
                 <header className="review-file-head">
                   <div className="review-file-path">
                     <strong>{item.display ?? item.path}</strong>
+                    {item.isNew === true ? <span className="file-chip new-file">new</span> : null}
+                    {item.roundUnread === true && (item.round ?? 1) > 1 && roundAck[item.id] !== item.round ? <span className="file-chip round-new">NEW</span> : null}
                     <span className="file-stat">
                       <span className="add">+{item.added ?? 0}</span>
                       <span className="del">−{item.removed ?? 0}</span>
@@ -368,8 +411,16 @@ export default function ReviewDetail({ review, onBack, send }) {
                 {decision?.stale ? (
                   <div className="stale-note">The AI changed this file after you decided. Review the new content and decide again.</div>
                 ) : null}
+                {decision?.incoming ? (
+                  <div className="incoming-note">
+                    <span>The AI added a new revision. Your edit is preserved and will be applied.</span>
+                    <button type="button" className="button small" disabled={finished || busy} onClick={() => resetEntry(item)}>
+                      Reset to AI latest
+                    </button>
+                  </div>
+                ) : null}
                 {item.warning ? <div className="warning">{item.warning}</div> : null}
-                <DiffView entry={item} />
+                <DiffView entry={item} highlightRound={item.roundUnread === true && (item.round ?? 1) > 1 && roundAck[item.id] !== item.round} />
                 <div className="comment-row">
                   <label className="comment-label" htmlFor={`review-comment-${itemIndex}`}>Message to the AI</label>
                   <CommentBox

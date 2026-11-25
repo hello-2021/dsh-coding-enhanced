@@ -341,8 +341,9 @@ popover.
 
 The web UI also has a persistent **Ask AI** box at the bottom of its left
 sidebar. Ask about any cached review by its `review-xxxx` name; history is
-kept in the web server SQLite database, and the answer comes from a sidecar
-agent so the open review and its waiter are not touched.
+kept in the web server SQLite database. The question is appended to the live
+main agent session, which reuses the project context and can queue review
+changes while the review stays open.
 
 For Vite HMR during development, run the server with
 `ORIGIN=http://localhost:5173` and use `npm run dev:web` (port 5173) instead of
