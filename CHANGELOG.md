@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.4
+
+- Fix web review chat appended to the main agent without a `role: "user"`
+  field. The host accepted the message, but every later turn on that session
+  failed with `messages[N]: missing field \`role\``; the message now carries the
+  role the session schema requires.
+
 ## 0.9.3
 
 - Global review sidebar chat: a persistent bottom-left thread delivered as a

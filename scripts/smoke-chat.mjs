@@ -88,6 +88,7 @@ send({ type: 'chat.send', requestId: 'req-1', sessionId: 'session-smoke', text: 
 await tick()
 assert.equal(messages.length, 1, 'main agent received the question')
 assert.equal(messages[0].source.kind, 'user')
+assert.equal(messages[0].role, 'user', 'chat message carries the user role the session schema requires')
 assert.match(messages[0].content[0].text, /review-auth-cleanup/)
 assert.match(messages[0].content[0].text, /What changed/)
 assert.match(messages[0].content[0].text, /Do not finish, approve or reject/)
