@@ -1,11 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
 
-const SUGGESTIONS = [
-  'Summarize open reviews',
-  'What changed in the latest review?',
-  'Which files are still waiting?',
-]
-
 export default function ChatPanel({ messages, busy, error, onSend }) {
   const [draft, setDraft] = useState('')
   const [collapsed, setCollapsed] = useState(() => {
@@ -51,12 +45,9 @@ export default function ChatPanel({ messages, busy, error, onSend }) {
   if (collapsed) {
     return (
       <button type="button" className="chat-panel collapsed" onClick={expand} aria-label="Expand Ask AI">
-        <span className="chat-mark">✦</span>
-        <span className="chat-collapsed-copy">
-          <span className="chat-title">Ask AI</span>
-          <span className="chat-sub">{busy ? 'thinking…' : 'project + reviews'}</span>
-        </span>
-        <span className="chat-expand">⌃</span>
+        <span className="chat-orb" />
+        <span className="chat-title">Ask AI</span>
+        <span className="chat-chevron">⌃</span>
       </button>
     )
   }
@@ -64,69 +55,38 @@ export default function ChatPanel({ messages, busy, error, onSend }) {
   return (
     <section className="chat-panel">
       <header className="chat-head">
-        <div className="chat-brand">
-          <span className="chat-mark">✦</span>
-          <span className="chat-brand-copy">
-            <span className="chat-title">Ask AI</span>
-            <span className="chat-sub">project + reviews</span>
-          </span>
-        </div>
-        <div className="chat-head-actions">
-          <span className={`chat-live${busy ? ' busy' : ''}`}><i />{busy ? 'thinking' : 'live'}</span>
-          <button type="button" className="chat-icon-button" title="Collapse" aria-label="Collapse Ask AI" onClick={() => setCollapsed(true)}>
-            –
-          </button>
-        </div>
+        <span className="chat-orb" />
+        <span className="chat-title">Ask AI</span>
+        <span className="chat-sub">project</span>
+        <span className={`chat-status${busy ? ' busy' : ''}`} title={busy ? 'Thinking' : 'Ready'} />
+        <button type="button" className="chat-chevron" title="Collapse" aria-label="Collapse Ask AI" onClick={() => setCollapsed(true)}>
+          ⌄
+        </button>
       </header>
 
       <div className="chat-thread" ref={threadRef}>
         {messages.length === 0 && !busy ? (
-          <div className="chat-empty">
-            <span className="chat-empty-mark">✦</span>
-            <strong>Ask about anything in this project.</strong>
-            <span>Reviews, files, decisions, or what to fix next.</span>
-            <div className="chat-suggestions">
-              {SUGGESTIONS.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  className="chat-suggestion"
-                  onClick={() => {
-                    setDraft(suggestion)
-                    inputRef.current?.focus()
-                  }}
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </div>
+          <p className="chat-empty">Ask about a review, a file, or what to fix next.</p>
         ) : null}
 
         {messages.map((message) => (
-          <div className={`chat-bubble ${message.role}`} key={message.id ?? `${message.role}-${message.createdAt}`}>
-            <span className={`chat-avatar ${message.role}`}>{message.role === 'user' ? 'Y' : 'AI'}</span>
-            <span className="chat-body">
-              <span className="chat-role">{message.role === 'user' ? 'You' : 'AI'}</span>
-              <span className="chat-text">{message.text}</span>
-            </span>
+          <div className={`chat-msg ${message.role}`} key={message.id ?? `${message.role}-${message.createdAt}`}>
+            <span className="chat-who">{message.role === 'user' ? 'Y' : 'AI'}</span>
+            <span className="chat-bubble">{message.text}</span>
           </div>
         ))}
 
         {busy ? (
-          <div className="chat-bubble assistant">
-            <span className="chat-avatar assistant">AI</span>
-            <span className="chat-body">
-              <span className="chat-role">AI</span>
-              <span className="chat-typing" aria-label="Thinking"><i /><i /><i /></span>
-            </span>
+          <div className="chat-msg ai">
+            <span className="chat-who">AI</span>
+            <span className="chat-typing" aria-label="Thinking"><i /><i /><i /></span>
           </div>
         ) : null}
 
         {error ? <div className="chat-error">{error}</div> : null}
       </div>
 
-      <div className="chat-composer">
+      <div className="chat-ask">
         <textarea
           ref={inputRef}
           value={draft}
@@ -134,22 +94,11 @@ export default function ChatPanel({ messages, busy, error, onSend }) {
           onKeyDown={onKeyDown}
           placeholder="Ask about any review…"
           disabled={busy}
-          rows={3}
+          rows={2}
         />
-        <div className="chat-composer-foot">
-          <span className="chat-hint">Enter to send · Shift+Enter newline</span>
-          <button
-            type="button"
-            className="chat-send"
-            onClick={send}
-            disabled={busy || draft.trim() === ''}
-            aria-label="Send question"
-          >
-            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-              <path d="M8 13V3M8 3 3.5 7.5M8 3l4.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </div>
+        <button type="button" className="chat-send" onClick={send} disabled={busy || draft.trim() === ''}>
+          Send
+        </button>
       </div>
     </section>
   )
