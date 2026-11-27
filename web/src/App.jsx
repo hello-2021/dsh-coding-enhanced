@@ -96,9 +96,10 @@ function AuthScreen({ onUser }) {
       <div className="auth-card">
         <div className="brand-mark">DSH</div>
         <h1>Review, remotely.</h1>
-        <p className="muted">Sign in with a username and user key. No passkey.</p>
+        <p className="muted">Sign in with a username and user key.</p>
 
         <div className="auth-tabs">
+          <span className={`auth-tab-indicator ${mode}`} aria-hidden="true" />
           <button type="button" className={mode === 'login' ? 'tab active' : 'tab'} onClick={() => { setMode('login'); setError(null) }}>
             Sign in
           </button>
@@ -107,7 +108,7 @@ function AuthScreen({ onUser }) {
           </button>
         </div>
 
-        <form onSubmit={submit}>
+        <form className="auth-form" key={mode} onSubmit={submit}>
           <label className="field">
             <span>Username</span>
             <input
